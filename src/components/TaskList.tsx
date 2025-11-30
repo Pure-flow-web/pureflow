@@ -3,8 +3,10 @@
 import { useState, useMemo } from 'react';
 import { useStore, type Task } from '@/lib/store';
 import TaskModal from '@/components/TaskModal';
-import { Plus, Edit, Trash2, Check, Download } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Download, FileText, FileWord } from 'lucide-react';
 import { toast } from 'sonner';
+import { saveAs } from 'file-saver';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
 const priorityStyles: { [key in Task['priority']]: string } = {
   Urgent: 'border-l-red-500',
@@ -54,35 +56,81 @@ export default function TaskList() {
   const handleCloseModal = () => setTaskToEdit(null);
   const handleOpenModal = () => setTaskToEdit({} as Task);
 
-  const downloadTasks = (format: 'json' | 'txt') => {
+  const getFormattedDate = () => new Date().toISOString().split('T')[0];
+
+  const downloadTasksAsTxt = () => {
     if (tasks.length === 0) {
       toast.error("No tasks to download.");
       return;
     }
-    const filename = `PureFlow_Tasks_${new Date().toISOString().split('T')[0]}`;
-    let content = '';
-    let mimeType = '';
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const header = `=============================\nPUREFLOW TASKS – ${formattedDate.toUpperCase()}\n=============================`;
+    
+    const content = tasks.map(t => {
+      const status = t.completed ? 'Completed' : 'Not Started';
+      const dueDate = t.dueDate ? `Due: ${new Date(t.dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : 'Due: None';
+      const priority = `Priority: ${t.priority}`;
+      const description = t.description ? `\n    ${t.description}` : '';
+      return `\n[${status}] ${t.title}\n    ${dueDate} | ${priority}${description}`;
+    }).join('\n');
 
-    if (format === 'json') {
-      content = JSON.stringify(tasks, null, 2);
-      mimeType = 'application/json';
-    } else {
-      content = tasks.map(t => 
-        `[${t.completed ? 'x' : ' '}] ${t.title} (Priority: ${t.priority})${t.dueDate ? ` - Due: ${new Date(t.dueDate).toLocaleDateString()}` : ''}\n${t.description ? `  ${t.description}\n` : ''}`
-      ).join('\n');
-      mimeType = 'text/plain';
+    const fullContent = `${header}\n${content}`;
+    const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
+    saveAs(blob, `PureFlow_Tasks_${getFormattedDate()}.txt`);
+    toast.success("Tasks downloaded as TXT.");
+  };
+
+  const downloadTasksAsDocx = () => {
+    if (tasks.length === 0) {
+      toast.error("No tasks to download.");
+      return;
     }
     
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}.${format}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success(`Tasks downloaded as ${format.toUpperCase()}`);
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const title = `PureFlow Tasks – ${formattedDate}`;
+
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({
+            text: title,
+            heading: HeadingLevel.TITLE,
+          }),
+          ...tasks.flatMap(task => {
+            const status = task.completed ? '✓ Completed' : '☐ Not Started';
+            const dueDate = task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleDateString()}` : 'Due: None';
+
+            return [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: task.title, bold: true }),
+                ],
+                bullet: { level: 0 },
+              }),
+              new Paragraph({
+                children: [
+                   new TextRun({ text: `${status} | Priority: ${task.priority} | ${dueDate}`, italics: true, color: '888888' }),
+                ],
+                 indent: { left: 720 },
+              }),
+              ...(task.description ? [new Paragraph({
+                 children: [ new TextRun(task.description) ],
+                 indent: { left: 720 },
+              })] : []),
+              new Paragraph({ text: '' }), // Spacer
+            ]
+          })
+        ],
+      }],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, `PureFlow_Tasks_${getFormattedDate()}.docx`);
+      toast.success("Tasks downloaded as Word (.docx).");
+    });
   };
 
   const filteredTasks = useMemo(() => {
@@ -108,11 +156,11 @@ export default function TaskList() {
             <button onClick={handleOpenModal} className="inline-flex items-center justify-center h-9 gap-2 px-3 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
               <Plus className="w-4 h-4" /> Add Task
             </button>
-             <button onClick={() => downloadTasks('json')} className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
-              <Download className="w-4 h-4" />
+            <button onClick={downloadTasksAsTxt} title="Download as TXT" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
+              <FileText className="w-4 h-4" />
             </button>
-            <button onClick={() => downloadTasks('txt')} className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
-              TXT
+            <button onClick={downloadTasksAsDocx} title="Download as Word" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
+              <FileWord className="w-4 h-4" />
             </button>
           </div>
         </div>

@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useStore, type Note } from '@/lib/store';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Check, Download, Save, X, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Download, Save, X, Loader2, FileText, FileWord } from 'lucide-react';
+import { saveAs } from 'file-saver';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
 export default function NotesSection() {
   const { notes, addNote, updateNote, deleteNote, toggleNote } = useStore();
@@ -46,20 +48,79 @@ export default function NotesSection() {
     setCurrentContent('');
   };
   
-  const downloadNotes = () => {
+  const getFormattedDate = () => new Date().toISOString().split('T')[0];
+
+  const downloadNotesAsTxt = () => {
     if (notes.length === 0) {
       toast.error("No notes to download.");
       return;
     }
-    const content = notes.map(n => `[${n.completed ? 'x' : ' '}] Note from ${new Date(n.createdAt).toLocaleString()}\n\n${n.content}\n\n--------------------------------\n\n`).join('');
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `PureFlow_Notes_${new Date().toISOString().split('T')[0]}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const header = `=============================\nPUREFLOW NOTES – ${formattedDate.toUpperCase()}\n=============================`;
+
+    const content = notes.map(n => {
+      const status = n.completed ? '[x]' : '[ ]';
+      const created = new Date(n.createdAt).toLocaleString();
+      return `\n${status} Note from ${created}\n\n${n.content}\n\n--------------------------------\n`;
+    }).join('');
+
+    const fullContent = `${header}\n${content}`;
+    const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
+    saveAs(blob, `PureFlow_Notes_${getFormattedDate()}.txt`);
     toast.success("All notes downloaded as TXT.");
+  };
+
+  const downloadNotesAsDocx = () => {
+    if (notes.length === 0) {
+      toast.error("No notes to download.");
+      return;
+    }
+    
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const title = `PureFlow Notes – ${formattedDate}`;
+
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({
+            text: title,
+            heading: HeadingLevel.TITLE,
+          }),
+          ...notes.flatMap(note => {
+            const status = note.completed ? '✓ Completed' : '☐ Open';
+            const created = new Date(note.createdAt).toLocaleString();
+            
+            return [
+               new Paragraph({
+                children: [
+                  new TextRun({ text: `Note from ${created}`, bold: true }),
+                ],
+                bullet: { level: 0 },
+              }),
+              new Paragraph({
+                children: [
+                   new TextRun({ text: status, italics: true, color: '888888' }),
+                ],
+                 indent: { left: 720 },
+              }),
+              ...note.content.split('\n').map(p => new Paragraph({ 
+                  children: [new TextRun(p)],
+                  indent: { left: 720 },
+               })),
+              new Paragraph({ text: '' }), // Spacer
+            ]
+          })
+        ],
+      }],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, `PureFlow_Notes_${getFormattedDate()}.docx`);
+      toast.success("Notes downloaded as Word (.docx).");
+    });
   };
 
   return (
@@ -70,8 +131,11 @@ export default function NotesSection() {
           <button onClick={handleAddNew} className="inline-flex items-center justify-center h-9 gap-2 px-3 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
             <Plus className="w-4 h-4" /> New Note
           </button>
-          <button onClick={downloadNotes} className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
-            <Download className="w-4 h-4" />
+          <button onClick={downloadNotesAsTxt} title="Download as TXT" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
+            <FileText className="w-4 h-4" />
+          </button>
+          <button onClick={downloadNotesAsDocx} title="Download as Word" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
+            <FileWord className="w-4 h-4" />
           </button>
         </div>
       </div>
