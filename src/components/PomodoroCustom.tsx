@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Play, Pause, RotateCcw, Settings, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
 
 export default function PomodoroCustom() {
   const [minutes, setMinutes] = useState(25);
@@ -12,20 +13,9 @@ export default function PomodoroCustom() {
   const [isActive, setIsActive] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-        // A silent audio file to ensure playback on all browsers/devices
-        audioRef.current = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgyLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1BpbmdCAAAAAABAAAAjAAABnAAAAAAAAAABnAAAABAAAAAAAAAABOupBx4kGv9//5JkAMAAAD5DH//5JkZIAAAADBDH//5Jks4gAAADpDH//5JlL4gAAADpDH//5Jk/ogAAADBDH//5JlFogAAADxDHA==');
-    }
-  }, []);
-
-  const playSound = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.play().catch(e => console.error("Audio play failed:", e));
-      toast.success("Pomodoro session finished. Time for a break!");
-    }
+  const handleTimerEnd = useCallback(() => {
+    toast.success("Time's Up! Great focus session");
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
   }, []);
 
   const resetTimer = useCallback(() => {
@@ -40,7 +30,7 @@ export default function PomodoroCustom() {
       interval = setInterval(() => {
         if (seconds === 0) {
           if (minutes === 0) {
-            playSound();
+            handleTimerEnd();
             resetTimer();
           } else {
             setMinutes(minutes - 1);
@@ -54,7 +44,7 @@ export default function PomodoroCustom() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, seconds, minutes, playSound, resetTimer]);
+  }, [isActive, seconds, minutes, handleTimerEnd, resetTimer]);
 
   const toggleTimer = () => setIsActive(!isActive);
 
