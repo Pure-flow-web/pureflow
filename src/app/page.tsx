@@ -13,14 +13,10 @@ export default function PureFlowDashboard() {
   const [isMounted, setIsMounted] = useState(false);
   const [activeView, setActiveView] = useState<View>("dashboard");
 
-  // This effect ensures client-side-only code runs after mounting.
-  // This is a critical pattern to avoid hydration errors with localStorage-based state.
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Render a loading state on the server and during initial client render
-  // to prevent any hydration mismatches with client-side state.
   if (!isMounted) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-light-bg dark:bg-dark-bg">
@@ -69,7 +65,6 @@ export default function PureFlowDashboard() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <aside className="sticky top-0 h-screen p-3 md:p-4 bg-white/30 dark:bg-gray-800/20 backdrop-blur-xl border-r border-black/5 dark:border-white/5">
         <nav className="flex flex-col items-center h-full gap-2 md:items-stretch">
           <NavButton view="dashboard" label="Dashboard" icon={LayoutGrid} />
@@ -79,7 +74,6 @@ export default function PureFlowDashboard() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <Header />
         <main className="p-4 sm:p-6">{renderContent()}</main>

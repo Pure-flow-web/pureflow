@@ -50,7 +50,6 @@ interface AppState {
   deletePomodoroSession: (sessionId: string) => void;
 }
 
-// Custom middleware to gracefully handle storage errors (e.g., user disables localStorage)
 const safeLocalStorage = {
   getItem: (name: string) => {
     try {
@@ -123,7 +122,7 @@ export const useStore = create<AppState>()(
 
     }),
     {
-      name: 'pureflow-app-storage-v1', // Unique name for localStorage item
+      name: 'pureflow-app-storage-v2', 
       storage: createJSONStorage(() => safeLocalStorage),
       onRehydrateError: () => {
         console.warn("PureFlow: Could not rehydrate state from localStorage. Starting fresh.");

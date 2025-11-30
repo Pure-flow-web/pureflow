@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "PureFlow",
-  description: "The ultimate, battle-hardened productivity web app.",
+  description: "Focus on what matters. The ultimate productivity app.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -15,19 +16,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans bg-light-bg dark:bg-dark-bg text-gray-800 dark:text-gray-200 transition-colors duration-300">
+      <body className="font-sans bg-light-bg dark:bg-dark-bg text-gray-900 dark:text-gray-200">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              classNames: {
-                toast: "dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700 shadow-soft dark:shadow-soft-dark",
-                error: "dark:!bg-red-900 dark:!text-white",
-                success: "dark:!bg-green-800 dark:!text-white",
-              },
-            }}
-          />
+          <Toaster position="bottom-right" />
         </ThemeProvider>
       </body>
     </html>
