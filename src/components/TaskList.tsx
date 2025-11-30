@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useStore, type Task } from '@/lib/store';
 import TaskModal from '@/components/TaskModal';
-import { Plus, Edit, Trash2, Check, Download, FileText, FileWord } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Download, FileText, FileCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
@@ -160,7 +160,7 @@ export default function TaskList() {
               <FileText className="w-4 h-4" />
             </button>
             <button onClick={downloadTasksAsDocx} title="Download as Word" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
-              <FileWord className="w-4 h-4" />
+              <FileCode className="w-4 h-4" />
             </button>
           </div>
         </div>

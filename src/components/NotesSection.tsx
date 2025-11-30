@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useStore, type Note } from '@/lib/store';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Check, Download, Save, X, Loader2, FileText, FileWord } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Download, Save, X, Loader2, FileText, FileCode } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
@@ -135,7 +135,7 @@ export default function NotesSection() {
             <FileText className="w-4 h-4" />
           </button>
           <button onClick={downloadNotesAsDocx} title="Download as Word" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
-            <FileWord className="w-4 h-4" />
+            <FileCode className="w-4 h-4" />
           </button>
         </div>
       </div>
