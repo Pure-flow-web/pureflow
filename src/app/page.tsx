@@ -1,180 +1,127 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  signInWithPopup,
-  GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile,
-} from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
-import { toast } from "sonner";
-import { LoaderCircle, Eye, EyeOff } from "lucide-react";
-import { useAuth, useFirestore } from "@/firebase";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import { Sun, Moon, ListChecks, FileText, Timer, Menu, X } from "lucide-react";
+import TaskList from "@/components/TaskList";
+import Pomodoro from "@/components/Pomodoro";
+import { useStore } from "@/store/useStore";
 
-export default function AuthPage() {
-  const [isLoginView, setIsLoginView] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  
-  const router = useRouter();
-  const auth = useAuth();
-  const db = useFirestore();
+function NotesView() {
+  const notes = useStore((state) => state.notes);
+  const setNotes = useStore((state) => state.setNotes);
+  const [content, setContent] = useState(notes);
 
-  const handleGoogleSignIn = async () => {
-    if(!auth) return;
-    setIsLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      if (user && db) {
-        await setDoc(doc(db, "users", user.uid), {
-            displayName: user.displayName || "User",
-            email: user.email,
-            uid: user.uid,
-        }, { merge: true });
-        toast.success(`Welcome, ${user.displayName}!`);
-        router.push('/app');
-      } else {
-         throw new Error("Google sign-in did not return a user.");
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (content !== notes) {
+        setNotes(content);
       }
-    } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
-      toast.error("Google Sign-In Failed", { description: error.message || "An unknown error occurred." });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    }, 2000); // Auto-save every 2 seconds
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if(!auth || !db) return;
-    setIsLoading(true);
-
-    try {
-      if (isLoginView) {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        toast.success(`Welcome back, ${user.displayName || 'User'}!`);
-        router.push('/app');
-      } else {
-        if (!name.trim()) {
-          throw new Error("Name is required for signup.");
-        }
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        await updateProfile(user, { displayName: name });
-        await setDoc(doc(db, "users", user.uid), {
-            displayName: name,
-            email: user.email,
-            uid: user.uid,
-        });
-
-        toast.success(`Account created! Welcome, ${name}!`);
-        router.push('/app');
-      }
-    } catch (error: any) {
-      console.error("Email Auth Error:", error);
-      toast.error(isLoginView ? "Login Failed" : "Signup Failed", { description: error.message || "An unknown error occurred." });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [content, notes, setNotes]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">ZeroError</h1>
-            <p className="mt-2 text-muted-foreground">A rock-solid productivity app.</p>
-        </div>
+    <div className="h-full">
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Start typing your notes here... they will be saved automatically."
+        className="w-full h-full p-4 text-base bg-transparent border-0 rounded-lg resize-none focus:ring-0"
+      />
+    </div>
+  );
+}
 
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-center mb-6">{isLoginView ? "Sign In" : "Create Account"}</h2>
-          <form onSubmit={handleEmailAuth} className="space-y-4">
-            {!isLoginView && (
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full h-10 px-3 py-2 text-sm bg-transparent border border-input rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full h-10 px-3 py-2 text-sm bg-transparent border border-input rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              />
-            </div>
-            <div className="relative">
-              <label className="block text-sm font-medium text-muted-foreground mb-1">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full h-10 px-3 py-2 text-sm bg-transparent border border-input rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-8 text-muted-foreground">
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-10 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {isLoading ? <LoaderCircle className="animate-spin" /> : isLoginView ? "Sign In" : "Sign Up"}
-            </button>
-          </form>
+export default function DashboardPage() {
+  const { theme, setTheme } = useTheme();
+  const activeView = useStore((state) => state.activeView);
+  const setActiveView = useStore((state) => state.setActiveView);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
+  const NavItem = ({ view, icon: Icon, label }: { view: string, icon: React.ElementType, label: string }) => (
+    <button
+      onClick={() => {
+        setActiveView(view as 'tasks' | 'notes' | 'pomodoro');
+        setIsSidebarOpen(false);
+      }}
+      className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+        activeView === view
+          ? "bg-primary text-primary-foreground"
+          : "hover:bg-accent hover:text-accent-foreground"
+      }`}
+    >
+      <Icon className="w-5 h-5 mr-3" />
+      <span>{label}</span>
+    </button>
+  );
+  
+  const renderContent = () => {
+    switch (activeView) {
+      case "tasks":
+        return <TaskList />;
+      case "notes":
+        return <NotesView />;
+      case "pomodoro":
+        return <Pomodoro />;
+      default:
+        return <TaskList />;
+    }
+  };
+
+  if (!isMounted) {
+    return null; // Avoid hydration mismatch
+  }
+
+  return (
+    <div className="flex h-screen bg-background text-foreground">
+      {/* Mobile Sidebar Toggle */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed z-30 p-2 text-gray-500 bg-white rounded-full shadow-lg bottom-4 right-4 lg:hidden dark:bg-gray-800"
+      >
+        {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </button>
+
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-20 flex-shrink-0 w-64 p-4 space-y-2 transition-transform duration-300 transform bg-card border-r lg:relative lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <h1 className="px-4 text-2xl font-bold">InstantFlow</h1>
+        <nav className="flex flex-col pt-4 space-y-1">
+          <NavItem view="tasks" icon={ListChecks} label="Tasks" />
+          <NavItem view="notes" icon={FileText} label="Notes" />
+          <NavItem view="pomodoro" icon={Timer} label="Pomodoro" />
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex flex-col flex-1">
+        <header className="flex items-center justify-end flex-shrink-0 h-16 px-6 border-b">
           <button
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            className="w-full h-10 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2 rounded-full hover:bg-accent"
           >
-            {isLoading ? <LoaderCircle className="animate-spin" /> : (
-                <>
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/><path d="M1 1h22v22H1z" fill="none" /></svg>
-                Google
-                </>
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5" />
+            ) : (
+              <Moon className="w-5 h-5" />
             )}
+            <span className="sr-only">Toggle theme</span>
           </button>
-        </div>
-         <p className="text-center text-sm text-muted-foreground mt-6">
-            {isLoginView ? "Don't have an account?" : "Already have an account?"}{" "}
-            <button onClick={() => setIsLoginView(!isLoginView)} className="underline font-medium hover:text-primary">
-              {isLoginView ? "Sign up" : "Sign in"}
-            </button>
-        </p>
+        </header>
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 md:p-8">
+            {renderContent()}
+          </div>
+        </main>
       </div>
-    </main>
+    </div>
   );
 }
