@@ -14,12 +14,13 @@ export default function PureFlowDashboard() {
   const [activeView, setActiveView] = useState<View>("dashboard");
 
   // This effect ensures client-side-only code runs after mounting.
+  // This is a critical pattern to avoid hydration errors with localStorage-based state.
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   // Render a loading state on the server and during initial client render
-  // to prevent hydration mismatches.
+  // to prevent any hydration mismatches with client-side state.
   if (!isMounted) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-light-bg dark:bg-dark-bg">

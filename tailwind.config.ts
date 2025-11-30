@@ -1,22 +1,22 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: "class",
   theme: {
     extend: {
       colors: {
         'light-bg': '#F9FAFA',
         'dark-bg': '#1F2937',
-        'primary-green': '#A7F3D0',
         'accent-blue': '#60A5FA',
       },
       fontFamily: {
-        // Use a system font stack for maximum performance and compatibility
+        // Use a system font stack for maximum performance and compatibility.
+        // This avoids external network requests and ensures the app is fast and works offline.
         sans: [
           'system-ui',
           '-apple-system',
@@ -33,7 +33,7 @@ const config: Config = {
           '"Noto Color Emoji"',
         ],
       },
-      // Add a subtle glassmorphism effect with backdrop-blur
+      // A subtle glassmorphism effect via backdrop-blur.
       backdropBlur: {
         'xl': '24px',
       },

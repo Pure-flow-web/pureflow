@@ -1,23 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  
-  // Disable image optimization for full static compatibility
+  // Use standalone output for optimized Docker images and serverless deployments.
+  output: "standalone",
+  // Disable image optimization as we are not using next/image for external URLs
+  // and are focused on a static-friendly build.
   images: {
     unoptimized: true,
   },
-
-  // Ensure strict mode for identifying potential problems in React
-  reactStrictMode: true,
-
-  // Ignore TypeScript and ESLint errors during build to prevent deployment blocks
-  // This is for deployment resilience, assuming checks are done in CI/CD
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Ensure the app works correctly with static exports (`next export`).
+  trailingSlash: true,
 };
 
 export default nextConfig;
