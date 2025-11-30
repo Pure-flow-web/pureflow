@@ -20,21 +20,23 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
   
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState<Date | null>(null);
-  const [priority, setPriority] = useState("Med");
+  const [priority, setPriority] = useState<"Low" | "Med" | "High">("Med");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (taskToEdit) {
-      setTitle(taskToEdit.title);
-      setDueDate(taskToEdit.dueDate ? new Date(taskToEdit.dueDate) : null);
-      setPriority(taskToEdit.priority);
-    } else {
-      setTitle("");
-      setDueDate(null);
-      setPriority("Med");
+    if (isOpen) {
+        if (taskToEdit && taskToEdit.id) { // Check if it's a real task to edit
+            setTitle(taskToEdit.title);
+            setDueDate(taskToEdit.dueDate ? new Date(taskToEdit.dueDate) : null);
+            setPriority(taskToEdit.priority);
+        } else { // Reset for new task
+            setTitle("");
+            setDueDate(null);
+            setPriority("Med");
+        }
+        setError("");
     }
-    setError("");
   }, [taskToEdit, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,17 +47,19 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
     }
     setIsLoading(true);
 
-    const taskData = {
-      id: taskToEdit ? taskToEdit.id : Date.now().toString(),
+    const isEditing = taskToEdit && taskToEdit.id;
+
+    const taskData: Task = {
+      id: isEditing ? taskToEdit.id : Date.now().toString(),
       title: title.trim(),
       dueDate: dueDate ? dueDate.toISOString() : null,
       priority,
-      completed: taskToEdit ? taskToEdit.completed : false,
+      completed: isEditing ? taskToEdit.completed : false,
     };
     
     // Simulate network delay for better UX feel
     setTimeout(() => {
-      if (taskToEdit) {
+      if (isEditing) {
         updateTask(taskData);
       } else {
         addTask(taskData);
@@ -73,7 +77,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
         <button onClick={onClose} className="absolute text-muted-foreground top-4 right-4 hover:text-foreground">
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-xl font-semibold">{taskToEdit ? "Edit Task" : "Add New Task"}</h2>
+        <h2 className="text-xl font-semibold">{taskToEdit && taskToEdit.id ? "Edit Task" : "Add New Task"}</h2>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label htmlFor="title" className="block mb-1 text-sm font-medium text-muted-foreground">Title</label>
@@ -106,7 +110,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
                 <button
                   key={p}
                   type="button"
-                  onClick={() => setPriority(p)}
+                  onClick={() => setPriority(p as "Low" | "Med" | "High")}
                   className={`px-4 py-1.5 text-sm rounded-full transition-colors ${
                     priority === p ? "bg-primary text-primary-foreground font-semibold" : "bg-muted hover:bg-accent"
                   }`}
@@ -122,7 +126,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
               Cancel
             </button>
             <button type="submit" disabled={isLoading} className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-md h-10 bg-primary hover:bg-primary/90 disabled:opacity-50">
-              {isLoading ? <LoaderCircle className="w-5 h-5 animate-spin" /> : taskToEdit ? "Save Changes" : "Add Task"}
+              {isLoading ? <LoaderCircle className="w-5 h-5 animate-spin" /> : (taskToEdit && taskToEdit.id ? "Save Changes" : "Add Task")}
             </button>
           </div>
         </form>
