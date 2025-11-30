@@ -1,12 +1,12 @@
 "use client"
 
-import { useTheme } from "next-themes"
 import { Toaster as Sonner } from "sonner"
+import { useStore } from "@/lib/store";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const theme = useStore((state) => state.theme);
 
   return (
     <Sonner
@@ -15,12 +15,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
+            "group toast group-[.toaster]:bg-white/30 dark:group-[.toaster]:bg-gray-800/20 group-[.toaster]:text-gray-900 dark:group-[.toaster]:text-white group-[.toaster]:border-black/5 dark:group-[.toaster]:border-white/5 group-[.toaster]:shadow-soft backdrop-blur-xl",
+          description: "group-[.toast]:text-gray-500 dark:group-[.toast]:text-gray-400",
           actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+            "group-[.toast]:bg-accent-blue group-[.toast]:text-white",
           cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            "group-[.toast]:bg-gray-200/50 group-[.toast]:text-gray-700 dark:group-[.toast]:bg-gray-700/50 dark:group-[.toast]:text-gray-200",
         },
       }}
       {...props}
