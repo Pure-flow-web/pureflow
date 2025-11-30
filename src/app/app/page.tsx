@@ -1,7 +1,6 @@
 "use client";
 
 import { useStore } from "@/store/useStore";
-import { auth } from "@/lib/firebase";
 import { toast } from 'sonner';
 import { LogOut, Sun, Moon, LoaderCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -9,6 +8,7 @@ import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import TaskList from "@/components/TaskList";
+import { useAuth } from "@/firebase";
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -25,6 +25,7 @@ function ThemeToggle() {
 export default function DashboardPage() {
   const { user, isLoading } = useStore();
   const router = useRouter();
+  const auth = useAuth();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   }, [user, isLoading, router]);
 
   const handleLogout = async () => {
+    if (!auth) return;
     try {
       await auth.signOut();
       toast.info("You have been logged out.");

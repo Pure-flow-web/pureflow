@@ -1,23 +1,15 @@
 "use client";
 
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
+import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthWrapper from "@/components/AuthWrapper";
 import React from "react";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// This metadata will not be respected because the file is a client component.
-// In a real app, you would move this to a higher-level server component.
-// export const metadata: Metadata = {
-//   title: "ZeroError",
-//   description: "A rock-solid, crash-proof productivity app.",
-// };
-
-// A simple Error Boundary component
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback: React.ReactNode },
   { hasError: boolean }
@@ -28,6 +20,7 @@ class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: any) {
+    console.error("ErrorBoundary caught an error:", error);
     return { hasError: true };
   }
 
@@ -63,7 +56,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
            <ErrorBoundary fallback={<ErrorFallback />}>
-             <AuthWrapper>{children}</AuthWrapper>
+            <FirebaseClientProvider>
+                <AuthWrapper>{children}</AuthWrapper>
+            </FirebaseClientProvider>
            </ErrorBoundary>
           <Toaster />
         </ThemeProvider>

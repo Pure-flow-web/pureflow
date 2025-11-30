@@ -9,10 +9,10 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { toast } from "sonner";
 import { LoaderCircle, Eye, EyeOff } from "lucide-react";
+import { useAuth, useFirestore } from "@/firebase";
 
 export default function AuthPage() {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -23,16 +23,18 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   
   const router = useRouter();
+  const auth = useAuth();
+  const db = useFirestore();
 
   const handleGoogleSignIn = async () => {
+    if(!auth) return;
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      if (user) {
-        // Create user document in Firestore, merge to avoid overwriting if exists
+      if (user && db) {
         await setDoc(doc(db, "users", user.uid), {
             displayName: user.displayName || "User",
             email: user.email,
@@ -53,24 +55,21 @@ export default function AuthPage() {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if(!auth || !db) return;
     setIsLoading(true);
 
     try {
       if (isLoginView) {
-        // Sign In
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         toast.success(`Welcome back, ${user.displayName || 'User'}!`);
         router.push('/app');
       } else {
-        // Sign Up
         if (!name.trim()) {
           throw new Error("Name is required for signup.");
         }
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
-        // Update profile and create Firestore document
         await updateProfile(user, { displayName: name });
         await setDoc(doc(db, "users", user.uid), {
             displayName: name,

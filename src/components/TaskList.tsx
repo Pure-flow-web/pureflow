@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useStore } from "@/store/useStore";
-import { db } from "@/lib/firebase";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { Plus, CheckSquare, Trash2, Edit, LoaderCircle } from 'lucide-react';
@@ -10,6 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useFirestore } from '@/firebase';
+import { setDocNonBlocking, addDocNonBlocking, updateDocNonBlocking, deleteDocNonBlocking } from '@/firebase/non-blocking-updates';
+import { useCollection } from '@/firebase';
+
 
 interface Task {
   id: string;
@@ -20,6 +23,7 @@ interface Task {
 
 function TaskModal({ isOpen, onClose, task }: { isOpen: boolean, onClose: () => void, task: Task | null }) {
     const { user } = useStore();
+    const db = useFirestore();
     const [title, setTitle] = useState("");
     const [isLoading, setIsLoading] = useState(false);
   
@@ -32,7 +36,7 @@ function TaskModal({ isOpen, onClose, task }: { isOpen: boolean, onClose: () => 
     }, [task, isOpen]);
   
     const handleSubmit = async () => {
-      if (!user) {
+      if (!user || !db) {
         toast.error("You must be logged in.");
         return;
       }
@@ -43,28 +47,24 @@ function TaskModal({ isOpen, onClose, task }: { isOpen: boolean, onClose: () => 
       
       setIsLoading(true);
 
-      try {
-        if (task) {
-          const taskRef = doc(db, `users/${user.uid}/tasks`, task.id);
-          await updateDoc(taskRef, { title: title.trim() });
-          toast.success("Task updated!");
-        } else {
-          const tasksColRef = collection(db, `users/${user.uid}/tasks`);
-          await addDoc(tasksColRef, { 
-              title: title.trim(), 
-              completed: false, 
-              createdAt: serverTimestamp(), 
-              userId: user.uid 
-          });
-          toast.success("Task added!");
-        }
-        onClose();
-      } catch (error: any) {
-        console.error("Save Task Error:", error);
-        toast.error("Failed to save task", { description: error.message });
-      } finally {
-        setIsLoading(false);
+      const collectionRef = collection(db, `users/${user.uid}/tasks`);
+
+      if (task) {
+        const taskRef = doc(collectionRef, task.id);
+        updateDocNonBlocking(taskRef, { title: title.trim() });
+        toast.success("Task updated!");
+      } else {
+        addDocNonBlocking(collectionRef, { 
+            title: title.trim(), 
+            completed: false, 
+            createdAt: serverTimestamp(), 
+            userId: user.uid 
+        });
+        toast.success("Task added!");
       }
+      
+      setIsLoading(false);
+      onClose();
     };
   
     return (
@@ -100,38 +100,16 @@ function TaskModal({ isOpen, onClose, task }: { isOpen: boolean, onClose: () => 
 
 export default function TaskList() {
   const { user } = useStore();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const db = useFirestore();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (!user) {
-        setIsLoading(false);
-        return;
-    };
-    
-    setIsLoading(true);
-    const q = query(collection(db, `users/${user.uid}/tasks`), orderBy('createdAt', 'desc'));
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const tasksData: Task[] = [];
-        querySnapshot.forEach((doc) => {
-            tasksData.push({ id: doc.id, ...doc.data() } as Task);
-        });
-        setTasks(tasksData);
-        setIsLoading(false);
-        setError(null);
-    }, (err) => {
-        console.error("Error fetching tasks:", err);
-        setError("Failed to fetch tasks. Please check your connection and try again.");
-        toast.error("Failed to fetch tasks.");
-        setIsLoading(false);
-    });
+  const tasksQuery = useMemo(() => {
+    if (!user || !db) return null;
+    return query(collection(db, `users/${user.uid}/tasks`), orderBy('createdAt', 'desc'));
+  }, [user, db]);
 
-    return () => unsubscribe();
-  }, [user]);
+  const { data: tasks, isLoading, error } = useCollection<Task>(tasksQuery);
 
   const handleOpenModal = (task: Task | null = null) => {
     setEditingTask(task);
@@ -139,29 +117,20 @@ export default function TaskList() {
   };
   
   const handleToggleComplete = async (task: Task) => {
-    if (!user) return;
+    if (!user || !db) return;
     const taskRef = doc(db, `users/${user.uid}/tasks`, task.id);
-    try {
-      await updateDoc(taskRef, { completed: !task.completed });
-    } catch (err: any) {
-      console.error("Toggle complete error:", err);
-      toast.error("Failed to update task", { description: err.message });
-    }
+    updateDocNonBlocking(taskRef, { completed: !task.completed });
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!user) return;
+    if (!user || !db) return;
     const taskRef = doc(db, `users/${user.uid}/tasks`, taskId);
-    try {
-      await deleteDoc(taskRef);
-      toast.success(`Task deleted.`);
-    } catch (err: any) {
-      console.error("Delete task error:", err);
-      toast.error("Failed to delete task", { description: err.message });
-    }
+    deleteDocNonBlocking(taskRef);
+    toast.success(`Task deleted.`);
   };
   
   const sortedTasks = useMemo(() => {
+    if (!tasks) return [];
     return [...tasks].sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         return (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0);
@@ -183,11 +152,11 @@ export default function TaskList() {
 
       {error && (
         <div className="text-center py-16 border-2 border-dashed rounded-lg border-destructive/50 bg-destructive/10">
-            <h3 className="mt-4 text-lg font-medium text-destructive">{error}</h3>
+            <h3 className="mt-4 text-lg font-medium text-destructive">{error.message}</h3>
         </div>
       )}
       
-      {!isLoading && !error && tasks.length === 0 && (
+      {!isLoading && !error && tasks && tasks.length === 0 && (
         <div className="text-center py-16 border-2 border-dashed rounded-lg">
             <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-medium">All done!</h3>

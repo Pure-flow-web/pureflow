@@ -1,26 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 import { useStore } from "@/store/useStore";
 import { usePathname, useRouter } from "next/navigation";
+import { useUser } from "@/firebase";
 
 export default function AuthWrapper({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, setUser } = useStore();
+  const { user, isLoading: isAuthLoading, setUser } = useStore();
+  const { user: firebaseUser, isLoading: isUserLoading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     // This listener is the single source of truth for auth state
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: User | null) => {
-      setUser(firebaseUser);
-    });
+    setUser(firebaseUser);
+  }, [firebaseUser, setUser]);
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, [setUser]);
-  
+  const isLoading = isAuthLoading || isUserLoading;
+
   useEffect(() => {
     if (isLoading) return; // Wait until auth state is confirmed
 
@@ -42,6 +39,24 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
   // While loading auth state, show a generic loader
   if (isLoading) {
     return (
+        <div className="flex h-screen items-center justify-center bg-background">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+    );
+  }
+
+  // Prevent flicker on protected routes
+  if (!user && pathname.startsWith('/app')) {
+      return (
+        <div className="flex h-screen items-center justify-center bg-background">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+    );
+  }
+
+  // Prevent flicker on auth route
+  if (user && pathname === '/') {
+      return (
         <div className="flex h-screen items-center justify-center bg-background">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
         </div>
