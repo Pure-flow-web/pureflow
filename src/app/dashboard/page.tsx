@@ -1,19 +1,18 @@
 "use client";
 
-import { useUserStore } from "@/store/useUserStore";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { useAuth, useUser } from "@/firebase";
 import { toast } from "sonner";
-import { LogOut } from "lucide-react";
+import { LogOut, LoaderCircle } from "lucide-react";
 
 export default function DashboardPage() {
-  const { user } = useUserStore();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await auth.signOut();
       toast.success("You have been logged out.");
       router.push("/login");
     } catch (error: any) {
@@ -21,17 +20,30 @@ export default function DashboardPage() {
     }
   };
 
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <LoaderCircle className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    // This can happen briefly while redirecting
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
+      <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 md:px-6">
         <h1 className="text-xl font-bold">Flow</h1>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             {user?.displayName || user?.email}
           </span>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+            className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary/80"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
@@ -43,7 +55,7 @@ export default function DashboardPage() {
           <h2 className="text-3xl font-bold">
             Welcome, {user?.displayName || "User"}!
           </h2>
-          <p className="text-gray-500">
+          <p className="text-muted-foreground">
             Your dashboard is ready. Start being productive.
           </p>
         </div>

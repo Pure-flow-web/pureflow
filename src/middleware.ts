@@ -1,34 +1,34 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// This is a placeholder token name. In a real app, you'd get this from your Firebase setup.
-const AUTH_COOKIE_NAME = "firebase-auth-token";
-
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get(AUTH_COOKIE_NAME);
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get('firebaseIdToken');
 
-  const isAuthRoute = pathname === "/login" || pathname === "/signup";
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
 
-  // If the user has no auth token and is trying to access a protected route,
-  // redirect them to the login page.
-  if (!token && !isAuthRoute) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+  // If user is trying to access auth page while logged in, redirect to dashboard
+  if (isAuthPage && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // If the user has an auth token and is trying to access an auth route
-  // (like login or signup), redirect them to the main app page (e.g., tasks).
-  if (token && isAuthRoute) {
-    const appUrl = new URL("/tasks", request.url);
-    return NextResponse.redirect(appUrl);
+  // If user is trying to access a protected page while not logged in, redirect to login
+  const isProtectedPage = pathname.startsWith('/dashboard') || pathname.startsWith('/tasks') || pathname.startsWith('/notes') || pathname.startsWith('/pomodoro');
+  if (isProtectedPage && !token) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Allow the request to proceed if none of the above conditions are met.
   return NextResponse.next();
 }
 
 export const config = {
-  // This matcher ensures the middleware runs on all routes
-  // except for internal Next.js assets and static files.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 };

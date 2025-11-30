@@ -11,7 +11,7 @@ export default function Home() {
   useEffect(() => {
     if (!isUserLoading) {
       if (user) {
-        router.replace("/tasks");
+        router.replace("/dashboard");
       } else {
         router.replace("/login");
       }
@@ -19,7 +19,7 @@ export default function Home() {
   }, [user, isUserLoading, router]);
 
   return (
-    <div className="flex h-screen w-full items-center justify-center">
+    <div className="flex h-screen w-full items-center justify-center bg-background">
       <LoaderCircle className="h-10 w-10 animate-spin text-primary" />
     </div>
   );

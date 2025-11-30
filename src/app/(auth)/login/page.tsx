@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import { useAuth } from "@/firebase";
 import { toast } from "sonner";
-import { LogIn, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,9 +24,10 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/tasks");
+      // onAuthStateChanged will handle the redirect
+      router.push("/dashboard");
     } catch (error: any) {
-      toast.error("Login Failed", { description: error.message });
+      toast.error("Login Failed", { description: "Invalid email or password." });
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +38,8 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      router.push("/tasks");
+      // onAuthStateChanged will handle the redirect
+      router.push("/dashboard");
     } catch (error: any) {
       toast.error("Google Sign-In Failed", { description: error.message });
     } finally {
@@ -48,20 +50,20 @@ export default function LoginPage() {
   return (
     <div className="w-full max-w-md space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Welcome Back to Flow
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Welcome Back
         </h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-2 text-muted-foreground">
           Sign in to continue to your dashboard.
         </p>
       </div>
 
-      <div className="rounded-lg border bg-white p-8 shadow-sm">
+      <div className="rounded-lg border bg-card p-8 shadow-sm">
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-muted-foreground"
             >
               Email Address
             </label>
@@ -71,14 +73,14 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+              className="mt-1 block w-full appearance-none rounded-md border border-input bg-transparent px-3 py-2 placeholder-gray-400 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-muted-foreground"
             >
               Password
             </label>
@@ -88,14 +90,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+              className="mt-1 block w-full appearance-none rounded-md border border-input bg-transparent px-3 py-2 placeholder-gray-400 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+            className="flex w-full justify-center rounded-md border border-transparent bg-primary py-2 px-4 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
           >
             {isLoading ? (
               <LoaderCircle className="h-5 w-5 animate-spin" />
@@ -107,17 +109,19 @@ export default function LoginPage() {
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
+            <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+            <span className="bg-card px-2 text-muted-foreground">
+              Or continue with
+            </span>
           </div>
         </div>
 
         <button
           onClick={handleGoogleLogin}
           disabled={isLoading}
-          className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-transparent py-2 px-4 text-sm font-medium text-foreground shadow-sm hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -141,11 +145,11 @@ export default function LoginPage() {
           Google
         </button>
       </div>
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link
           href="/signup"
-          className="font-medium text-indigo-600 hover:text-indigo-500"
+          className="font-medium text-primary hover:underline"
         >
           Sign up
         </Link>

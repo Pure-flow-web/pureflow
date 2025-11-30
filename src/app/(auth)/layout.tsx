@@ -1,16 +1,34 @@
-import { useUserStore } from "@/store/useUserStore";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
+import { LoaderCircle } from 'lucide-react';
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // This is a server component, so we can't use the hook directly.
-  // The middleware will handle redirection for logged-in users.
-  // This layout is primarily for structure and styling of auth pages.
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
+  if (isUserLoading || user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       {children}
     </main>
   );
