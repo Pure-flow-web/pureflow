@@ -22,9 +22,10 @@ export interface Note {
 
 export interface PomodoroSession {
   id: string;
-  finishedAt: string;
-  duration: number; // in minutes
+  taskName: string;
   note: string;
+  durationMinutes: number;
+  date: string;
 }
 
 interface AppState {
@@ -45,7 +46,7 @@ interface AppState {
   toggleNote: (id: string) => void;
 
   addPomodoroSession: (session: PomodoroSession) => void;
-  updatePomodoroNote: (sessionId: string, note: string) => void;
+  updatePomodoroSession: (updatedSession: Partial<PomodoroSession> & { id: string }) => void;
   deletePomodoroSession: (sessionId: string) => void;
 }
 
@@ -111,9 +112,9 @@ export const useStore = create<AppState>()(
 
       // Pomodoro History actions
       addPomodoroSession: (session) => set((state) => ({ pomodoroHistory: [session, ...state.pomodoroHistory] })),
-      updatePomodoroNote: (sessionId, note) => set((state) => ({
+      updatePomodoroSession: (updatedSession) => set((state) => ({
         pomodoroHistory: state.pomodoroHistory.map(session => 
-            session.id === sessionId ? {...session, note} : session
+            session.id === updatedSession.id ? {...session, ...updatedSession} : session
         )
       })),
       deletePomodoroSession: (sessionId) => set(state => ({
