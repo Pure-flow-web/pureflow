@@ -3,24 +3,51 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import AuthProvider from "@/components/AuthProvider";
-import Script from "next/script";
+import AuthWrapper from "@/components/AuthWrapper";
+import React from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "WorkDone",
-  description: "Focus on what matters.",
+  title: "ZeroError",
+  description: "A rock-solid, crash-proof productivity app.",
 };
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+// A simple Error Boundary component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
+const ErrorFallback = () => (
+    <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        <div className="text-center">
+            <h1 className="text-2xl font-bold text-destructive">Something went wrong.</h1>
+            <p className="mt-2 text-muted-foreground">Please refresh the page and try again.</p>
+        </div>
+    </div>
+);
+
 
 export default function RootLayout({
   children,
@@ -29,18 +56,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-         <Script
-            id="firebase-config"
-            strategy="beforeInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `window.__FIREBASE_CONFIG__ = ${JSON.stringify(firebaseConfig)};`,
-            }}
-          />
-      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>{children}</AuthProvider>
+           <ErrorBoundary fallback={<ErrorFallback />}>
+             <AuthWrapper>{children}</AuthWrapper>
+           </ErrorBoundary>
           <Toaster />
         </ThemeProvider>
       </body>

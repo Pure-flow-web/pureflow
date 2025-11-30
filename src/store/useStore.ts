@@ -11,6 +11,6 @@ interface StoreState {
 
 export const useStore = create<StoreState>((set) => ({
   user: null,
-  isLoading: true,
+  isLoading: true, // Start as true until first auth check completes
   setUser: (user) => set({ user, isLoading: false }),
 }));
