@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
-import { collection, doc, addDoc, updateDoc, Timestamp } from "firebase/firestore";
+import "react-datepicker/dist/react-datepicker.css";
+import { collection, doc, Timestamp } from "firebase/firestore";
 import { useFirestore, useUser } from "@/firebase";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { Task } from "./TaskList";
+import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
 
 interface TaskModalProps {
   task: Task | null;
@@ -27,7 +30,7 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
       setTitle(task.title);
       setNote(task.note || "");
       setPriority(task.priority || "Medium");
-      setDueDate(task.dueDate ? (task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate)) : null);
+      setDueDate(task.dueDate ? (task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate as any)) : null);
     }
   }, [task]);
 
@@ -43,27 +46,28 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
     }
 
     const taskData = {
+      userId: user.uid,
       title: title.trim(),
       note: note.trim(),
       priority,
-      dueDate,
+      dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
       completed: task ? task.completed : false,
     };
 
     if (task && task.id) {
       const taskRef = doc(firestore, "users", user.uid, "tasks", task.id);
-      await updateDoc(taskRef, taskData);
+      setDocumentNonBlocking(taskRef, taskData, { merge: true });
       toast.success("Task updated!");
     } else {
       const tasksCol = collection(firestore, "users", user.uid, "tasks");
-      await addDoc(tasksCol, taskData);
+      addDocumentNonBlocking(tasksCol, taskData);
       toast.success("Task added!");
     }
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="relative bg-card w-full max-w-md m-4 p-6 rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-3 right-3 p-2 rounded-full text-muted-foreground hover:bg-secondary">
           <X className="w-5 h-5" />
@@ -91,14 +95,14 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
               placeholder="Add more details..."
             />
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label htmlFor="priority" className="block text-sm font-medium mb-1">Priority</label>
               <select
                 id="priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as "Low" | "Medium" | "High")}
-                className="w-full h-10 px-3 py-2 text-sm bg-background border border-input rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="w-full h-10 px-3 py-2 text-sm bg-background border border-input rounded-md ring-offset-background appearance-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <option>Low</option>
                 <option>Medium</option>
@@ -107,10 +111,10 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
             </div>
             <div className="flex-1">
               <label htmlFor="dueDate" className="block text-sm font-medium mb-1">Due Date</label>
-              <DatePicker
+               <DatePicker
                 selected={dueDate}
-                onChange={(date) => setDueDate(date)}
-                className="w-full"
+                onChange={(date: Date | null) => setDueDate(date)}
+                className="w-full h-10 px-3 py-2 text-sm bg-background border border-input rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholderText="Select a date"
                 isClearable
               />
@@ -126,7 +130,7 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium bg-accent text-accent-foreground rounded-md hover:bg-accent/90"
+              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
             >
               {task ? "Save Changes" : "Add Task"}
             </button>

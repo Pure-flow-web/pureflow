@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import "react-datepicker/dist/react-datepicker.css";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { FirebaseClientProvider } from "@/firebase";
 import { Toaster } from "sonner";
-import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PureFlow",
-  description: "A minimal and clean productivity app.",
+  title: "Flow",
+  description: "Minimalist Productivity",
 };
 
 export default function RootLayout({
@@ -20,17 +19,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <FirebaseClientProvider>
-            {children}
-            <Toaster position="bottom-right" theme="system" />
-          </FirebaseClientProvider>
+          <FirebaseClientProvider>{children}</FirebaseClientProvider>
+          <Toaster richColors />
         </ThemeProvider>
       </body>
     </html>
