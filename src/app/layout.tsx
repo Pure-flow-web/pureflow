@@ -1,3 +1,5 @@
+"use client";
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -8,10 +10,12 @@ import React from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "ZeroError",
-  description: "A rock-solid, crash-proof productivity app.",
-};
+// This metadata will not be respected because the file is a client component.
+// In a real app, you would move this to a higher-level server component.
+// export const metadata: Metadata = {
+//   title: "ZeroError",
+//   description: "A rock-solid, crash-proof productivity app.",
+// };
 
 // A simple Error Boundary component
 class ErrorBoundary extends React.Component<
