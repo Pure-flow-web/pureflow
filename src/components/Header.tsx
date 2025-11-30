@@ -1,21 +1,16 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { Sun, Moon, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ThemeProvider } from "./ThemeProvider";
+import { useStore } from "@/lib/store";
 
 export default function Header() {
   const [isMounted, setIsMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useStore();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
 
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white/30 dark:bg-gray-900/30 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
@@ -39,5 +34,3 @@ export default function Header() {
     </header>
   );
 }
-
-export { ThemeProvider };

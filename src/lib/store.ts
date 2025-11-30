@@ -29,6 +29,9 @@ export interface PomodoroSession {
 }
 
 interface AppState {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+
   tasks: Task[];
   notes: Note[];
   pomodoroHistory: PomodoroSession[];
@@ -52,6 +55,9 @@ interface AppState {
 
 const safeLocalStorage = {
   getItem: (name: string) => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
     try {
       return localStorage.getItem(name);
     } catch {
@@ -59,6 +65,9 @@ const safeLocalStorage = {
     }
   },
   setItem: (name: string, value: string) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     try {
       localStorage.setItem(name, value);
     } catch (error) {
@@ -66,6 +75,9 @@ const safeLocalStorage = {
     }
   },
   removeItem: (name: string) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     try {
       localStorage.removeItem(name);
     } catch {}
@@ -75,6 +87,8 @@ const safeLocalStorage = {
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
+      theme: 'light',
+      toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
       tasks: [],
       notes: [],
       pomodoroHistory: [],
