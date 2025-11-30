@@ -1,7 +1,9 @@
+
 "use client";
 
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import type { User } from 'firebase/auth';
 
 export interface Task {
   id: string;
@@ -16,6 +18,8 @@ interface AppState {
   notes: string;
   activeView: 'tasks' | 'notes' | 'pomodoro';
   taskToEdit: Task | null;
+  user: User | null;
+  isLoading: boolean;
   addTask: (task: Task) => void;
   updateTask: (updatedTask: Task) => void;
   deleteTask: (id: string) => void;
@@ -23,6 +27,7 @@ interface AppState {
   setNotes: (notes: string) => void;
   setActiveView: (view: 'tasks' | 'notes' | 'pomodoro') => void;
   setTaskToEdit: (task: Task | null) => void;
+  setUser: (user: User | null) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -32,6 +37,8 @@ export const useStore = create<AppState>()(
       notes: '',
       activeView: 'tasks',
       taskToEdit: null,
+      user: null,
+      isLoading: true,
       addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
       updateTask: (updatedTask) =>
         set((state) => ({
@@ -52,10 +59,15 @@ export const useStore = create<AppState>()(
       setNotes: (notes) => set({ notes }),
       setActiveView: (view) => set({ activeView: view }),
       setTaskToEdit: (task) => set({ taskToEdit: task }),
+      setUser: (user) => set({ user, isLoading: false }),
     }),
     {
       name: 'instantflow-storage', // name of the item in the storage (must be unique)
       storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(([key]) => !['user', 'isLoading'].includes(key))
+        ),
     }
   )
 );
