@@ -8,7 +8,7 @@ export interface Task {
   title: string;
   description?: string | null;
   dueDate: string | null;
-  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
+  priority: 'Urgent' | 'High' | 'Medium' | 'Low';
   completed: boolean;
   createdAt: string;
 }
@@ -20,9 +20,17 @@ export interface Note {
   createdAt: string;
 }
 
+export interface PomodoroSession {
+  id: string;
+  finishedAt: string;
+  duration: number; // in minutes
+  note: string;
+}
+
 interface AppState {
   tasks: Task[];
   notes: Note[];
+  pomodoroHistory: PomodoroSession[];
   taskToEdit: Task | null;
   
   addTask: (task: Task) => void;
@@ -35,6 +43,10 @@ interface AppState {
   updateNote: (updatedNote: Partial<Note> & { id: string }) => void;
   deleteNote: (id: string) => void;
   toggleNote: (id: string) => void;
+
+  addPomodoroSession: (session: PomodoroSession) => void;
+  updatePomodoroNote: (sessionId: string, note: string) => void;
+  deletePomodoroSession: (sessionId: string) => void;
 }
 
 // Custom middleware to gracefully handle storage errors (e.g., user disables localStorage)
@@ -65,8 +77,10 @@ export const useStore = create<AppState>()(
     (set) => ({
       tasks: [],
       notes: [],
+      pomodoroHistory: [],
       taskToEdit: null,
       
+      // Task actions
       addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
       updateTask: (updatedTask) => set((state) => ({
         tasks: state.tasks.map((task) =>
@@ -81,6 +95,7 @@ export const useStore = create<AppState>()(
       })),
       setTaskToEdit: (task) => set({ taskToEdit: task }),
 
+      // Note actions
       addNote: (note) => set((state) => ({ notes: [...state.notes, note] })),
       updateNote: (updatedNote) => set((state) => ({
         notes: state.notes.map((note) =>
@@ -93,13 +108,23 @@ export const useStore = create<AppState>()(
             note.id === id ? { ...note, completed: !note.completed } : note
         )
       })),
+
+      // Pomodoro History actions
+      addPomodoroSession: (session) => set((state) => ({ pomodoroHistory: [session, ...state.pomodoroHistory] })),
+      updatePomodoroNote: (sessionId, note) => set((state) => ({
+        pomodoroHistory: state.pomodoroHistory.map(session => 
+            session.id === sessionId ? {...session, note} : session
+        )
+      })),
+      deletePomodoroSession: (sessionId) => set(state => ({
+        pomodoroHistory: state.pomodoroHistory.filter(session => session.id !== sessionId)
+      })),
+
     }),
     {
       name: 'pureflow-app-storage-v1', // Unique name for localStorage item
       storage: createJSONStorage(() => safeLocalStorage),
       onRehydrateError: () => {
-        // This function is called if the stored state can't be parsed.
-        // It gracefully fails without crashing the app.
         console.warn("PureFlow: Could not rehydrate state from localStorage. Starting fresh.");
         return (state, error) => { /* no-op */ };
       }
