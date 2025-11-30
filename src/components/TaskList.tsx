@@ -126,16 +126,16 @@ export default function TaskList() {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
           <h2 className="text-xl font-bold tracking-tight">Tasks</h2>
           <div className="flex items-center gap-2">
-            <button onClick={handleOpenModal} className="inline-flex items-center justify-center h-9 gap-2 px-3 text-sm font-semibold text-white bg-accent-blue rounded-lg hover:bg-accent-blue/90"><Plus className="w-4 h-4" /> Add Task</button>
+            <button onClick={handleOpenModal} className="inline-flex items-center justify-center h-9 gap-2 px-3 text-sm font-semibold text-white bg-accent-blue rounded-lg hover:bg-blue-500"><Plus className="w-4 h-4" /> Add Task</button>
             <button onClick={downloadTasksAsTxt} title="Download as TXT" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200/50 rounded-lg dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"><FileText className="w-4 h-4" /></button>
             <button onClick={downloadTasksAsDocx} title="Download as Word" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200/50 rounded-lg dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"><FileCode className="w-4 h-4" /></button>
           </div>
         </div>
 
         <div className="flex items-center gap-2 mb-4">
-          <button onClick={() => setFilter('pending')} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${filter === 'pending' ? 'bg-accent-blue text-white' : 'bg-gray-200/50 dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>Pending</button>
-          <button onClick={() => setFilter('completed')} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${filter === 'completed' ? 'bg-accent-blue text-white' : 'bg-gray-200/50 dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>Completed</button>
-          <button onClick={() => setFilter('all')} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${filter === 'all' ? 'bg-accent-blue text-white' : 'bg-gray-200/50 dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>All</button>
+          <button onClick={() => setFilter('pending')} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${filter === 'pending' ? 'bg-accent-blue text-white' : 'bg-gray-200/50 text-gray-600 dark:text-gray-300 dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>Pending</button>
+          <button onClick={() => setFilter('completed')} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${filter === 'completed' ? 'bg-accent-blue text-white' : 'bg-gray-200/50 text-gray-600 dark:text-gray-300 dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>Completed</button>
+          <button onClick={() => setFilter('all')} className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${filter === 'all' ? 'bg-accent-blue text-white' : 'bg-gray-200/50 text-gray-600 dark:text-gray-300 dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>All</button>
         </div>
         
         {filteredTasks.length === 0 ? (

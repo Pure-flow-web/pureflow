@@ -81,7 +81,7 @@ export default function NotesSection() {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold tracking-tight">Notes</h2>
         <div className="flex items-center gap-2">
-          <button onClick={handleAddNew} className="inline-flex items-center justify-center h-9 gap-2 px-3 text-sm font-semibold text-white bg-accent-blue rounded-lg hover:bg-accent-blue/90"><Plus className="w-4 h-4" /> New</button>
+          <button onClick={handleAddNew} className="inline-flex items-center justify-center h-9 gap-2 px-3 text-sm font-semibold text-white bg-accent-blue rounded-lg hover:bg-blue-500"><Plus className="w-4 h-4" /> New</button>
           <button onClick={downloadNotesAsTxt} title="Download as TXT" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200/50 rounded-lg dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"><FileText className="w-4 h-4" /></button>
           <button onClick={downloadNotesAsDocx} title="Download as Word" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200/50 rounded-lg dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"><FileCode className="w-4 h-4" /></button>
         </div>
@@ -93,7 +93,7 @@ export default function NotesSection() {
             className="w-full p-3 text-sm bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue" />
           <div className="flex items-center justify-end gap-2 mt-2">
             <button onClick={handleCancel} className="h-8 px-3 text-sm font-medium text-gray-700 bg-gray-200 rounded-md dark:text-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"><X className="w-4 h-4"/></button>
-            <button onClick={handleSave} disabled={isSaving} className="inline-flex items-center h-8 gap-2 px-3 text-sm font-medium text-white bg-accent-blue rounded-md hover:bg-accent-blue/90 disabled:opacity-50">{isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}</button>
+            <button onClick={handleSave} disabled={isSaving} className="inline-flex items-center h-8 gap-2 px-3 text-sm font-medium text-white bg-accent-blue rounded-md hover:bg-blue-500 disabled:opacity-50">{isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}</button>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Play, Pause, RotateCcw, Settings, Check, Edit, Trash2, FileText, FileCode, Save, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
@@ -21,6 +21,7 @@ function PomodoroSaveModal({
   editingSession: PomodoroSession | null 
 }) {
   const { addPomodoroSession, updatePomodoroSession } = useStore();
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const [taskName, setTaskName] = useState('');
   const [note, setNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,8 +35,16 @@ function PomodoroSaveModal({
         setTaskName('');
         setNote('');
       }
+      dialogRef.current?.showModal();
+    } else {
+      dialogRef.current?.close();
     }
   }, [isOpen, editingSession]);
+
+  const handleClose = () => {
+    dialogRef.current?.close();
+    onClose();
+  }
 
   const handleSave = () => {
     if (!taskName.trim()) {
@@ -65,16 +74,14 @@ function PomodoroSaveModal({
       }
 
       setIsLoading(false);
-      onClose();
+      handleClose();
     }, 300);
   };
   
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-lg p-6 mx-4 bg-light-bg dark:bg-gray-800 rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute text-gray-400 top-4 right-4 hover:text-gray-600 dark:hover:text-gray-200"><X className="w-5 h-5" /></button>
+    <dialog ref={dialogRef} onCancel={handleClose} className="bg-transparent backdrop:bg-black/60 backdrop:backdrop-blur-sm p-0 m-0 w-full max-w-lg rounded-xl">
+      <div className="w-full max-w-lg p-6 mx-4 bg-gray-50 dark:bg-gray-800 rounded-xl shadow-2xl">
+        <button onClick={handleClose} className="absolute text-gray-400 top-4 right-4 hover:text-gray-600 dark:hover:text-gray-200"><X className="w-5 h-5" /></button>
         <h2 className="text-xl font-bold">{editingSession ? 'Edit Session' : 'Save Session'}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Log the focus session you just completed.</p>
         
@@ -97,14 +104,14 @@ function PomodoroSaveModal({
           </div>
 
           <div className="flex justify-end pt-2 space-x-3">
-            <button onClick={onClose} disabled={isLoading} className="px-4 py-2 text-sm font-medium transition-colors rounded-lg h-10 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50">Cancel</button>
-            <button onClick={handleSave} disabled={isLoading} className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-accent-blue hover:bg-accent-blue/90 disabled:opacity-50">
+            <button type="button" onClick={handleClose} disabled={isLoading} className="px-4 py-2 text-sm font-medium transition-colors rounded-lg h-10 text-gray-700 bg-gray-200 hover:bg-gray-300 dark:text-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50">Cancel</button>
+            <button onClick={handleSave} disabled={isLoading} className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-accent-blue hover:bg-blue-500 disabled:opacity-50">
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (editingSession ? "Save Changes" : "Save to History")}
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -268,15 +275,15 @@ export default function PomodoroCustom() {
                 onKeyDown={(e) => e.key === 'Enter' && handleSetDuration()}
                 className="w-24 h-12 px-3 text-lg font-bold text-center bg-gray-100 border-2 border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent-blue"
             />
-            <button onClick={handleSetDuration} className="flex items-center justify-center w-12 h-12 text-white bg-accent-blue rounded-lg hover:bg-accent-blue/90"><Check className="w-6 h-6"/></button>
+            <button onClick={handleSetDuration} className="flex items-center justify-center w-12 h-12 text-white bg-accent-blue rounded-lg hover:bg-blue-500"><Check className="w-6 h-6"/></button>
         </div>
       ) : (
         <div className="flex items-center justify-center space-x-4 mb-4">
-          <button onClick={() => setIsEditingDuration(true)} className="flex items-center justify-center w-12 h-12 bg-gray-200/50 rounded-full dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600"><Settings className="w-6 h-6" /></button>
-          <button onClick={() => setIsActive(!isActive)} className="flex items-center justify-center w-20 h-20 text-white bg-accent-blue rounded-full hover:bg-accent-blue/90 shadow-lg">
+          <button onClick={() => setIsEditingDuration(true)} className="flex items-center justify-center w-12 h-12 bg-gray-200/50 rounded-full dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"><Settings className="w-6 h-6" /></button>
+          <button onClick={() => setIsActive(!isActive)} className="flex items-center justify-center w-20 h-20 text-white bg-accent-blue rounded-full hover:bg-blue-500 shadow-lg">
             {isActive ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
           </button>
-          <button onClick={resetTimer} className="flex items-center justify-center w-12 h-12 bg-gray-200/50 rounded-full dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600"><RotateCcw className="w-6 h-6" /></button>
+          <button onClick={resetTimer} className="flex items-center justify-center w-12 h-12 bg-gray-200/50 rounded-full dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"><RotateCcw className="w-6 h-6" /></button>
         </div>
       )}
 

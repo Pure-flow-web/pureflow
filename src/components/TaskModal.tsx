@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStore, type Task } from "@/lib/store";
 import { X, Loader2 } from "lucide-react";
 import DatePicker from "react-datepicker";
@@ -17,6 +17,7 @@ const priorities: Task['priority'][] = ["Low", "Medium", "High", "Urgent"];
 
 export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProps) {
   const { addTask, updateTask } = useStore();
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -37,9 +38,17 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
         setDueDate(null);
         setPriority("Medium");
       }
+      dialogRef.current?.showModal();
+    } else {
+      dialogRef.current?.close();
     }
   }, [taskToEdit, isOpen]);
   
+  const handleClose = () => {
+    dialogRef.current?.close();
+    onClose();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -58,7 +67,6 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
       createdAt: isEditing ? taskToEdit.createdAt : new Date().toISOString(),
     };
 
-    // Simulate async operation to feel responsive
     setTimeout(() => {
       try {
         if (isEditing) {
@@ -69,7 +77,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
           toast.success("Task added successfully!");
         }
         setIsLoading(false);
-        onClose();
+        handleClose();
       } catch (error) {
         toast.error("An unexpected error occurred. Please try again.");
         setIsLoading(false);
@@ -77,12 +85,10 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
     }, 300);
   };
   
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" onClick={onClose}>
-      <div className="relative w-full max-w-lg p-6 mx-4 bg-light-bg dark:bg-gray-800 rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute text-gray-400 top-4 right-4 hover:text-gray-600 dark:hover:text-gray-200">
+    <dialog ref={dialogRef} onCancel={handleClose} className="bg-transparent backdrop:bg-black/60 backdrop:backdrop-blur-sm p-0 m-0 w-full max-w-lg rounded-xl">
+      <div className="w-full p-6 bg-gray-50 dark:bg-gray-800 rounded-xl shadow-2xl">
+        <button onClick={handleClose} className="absolute text-gray-400 top-4 right-4 hover:text-gray-600 dark:hover:text-gray-200">
           <X className="w-5 h-5" />
         </button>
         <h2 className="text-xl font-bold">{taskToEdit && taskToEdit.id ? "Edit Task" : "Add New Task"}</h2>
@@ -115,24 +121,24 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
               <label className="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-300">Priority</label>
               <div className="flex flex-wrap items-center gap-2">
                 {priorities.map((p) => (
-                  <button key={p} type="button" onClick={() => setPriority(p)} className={`px-3 py-1 text-sm font-medium rounded-full transition-all ${priority === p ? 'ring-2 ring-offset-2 ring-accent-blue dark:ring-offset-dark-bg' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>{p}</button>
+                  <button key={p} type="button" onClick={() => setPriority(p)} className={`px-3 py-1 text-sm font-medium rounded-full transition-all ${priority === p ? 'ring-2 ring-offset-2 ring-accent-blue dark:ring-offset-gray-800' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>{p}</button>
                 ))}
               </div>
             </div>
           </div>
           
           <div className="flex justify-end pt-4 space-x-3">
-            <button type="button" onClick={onClose} disabled={isLoading} 
-              className="px-4 py-2 text-sm font-medium transition-colors rounded-lg h-10 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50">
+            <button type="button" onClick={handleClose} disabled={isLoading} 
+              className="px-4 py-2 text-sm font-medium transition-colors rounded-lg h-10 text-gray-700 bg-gray-200 hover:bg-gray-300 dark:text-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50">
               Cancel
             </button>
             <button type="submit" disabled={isLoading} 
-              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-accent-blue hover:bg-accent-blue/90 disabled:opacity-50 disabled:bg-blue-400">
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-accent-blue hover:bg-blue-500 disabled:opacity-50 disabled:bg-blue-400">
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (taskToEdit && taskToEdit.id ? "Save Changes" : "Add Task")}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 }
