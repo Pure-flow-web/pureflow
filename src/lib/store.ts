@@ -96,7 +96,7 @@ export const useStore = create<AppState>()(
       setTaskToEdit: (task) => set({ taskToEdit: task }),
 
       // Note actions
-      addNote: (note) => set((state) => ({ notes: [...state.notes, note] })),
+      addNote: (note) => set((state) => ({ notes: [note, ...state.notes] })),
       updateNote: (updatedNote) => set((state) => ({
         notes: state.notes.map((note) =>
             note.id === updatedNote.id ? { ...note, ...updatedNote } : note
