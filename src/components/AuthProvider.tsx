@@ -1,52 +1,34 @@
 "use client";
 
-import { useEffect } from "react";
-import { onIdTokenChanged, type User } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useStore } from "@/store/useStore";
 import { useRouter, usePathname } from "next/navigation";
 import { PageLoader } from "./LoadingSpinner";
 
-function setCookie(name: string, value: string, days: number) {
-    let expires = "";
-    if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days*24*60*60*1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    if (typeof document !== 'undefined') {
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-    }
-}
-
-function eraseCookie(name: string) {
-    if (typeof document !== 'undefined') {
-        document.cookie = name+'=; Max-Age=-99999999; path=/;';
-    }
-}
-
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user, isLoading, setUser } = useStore();
   const router = useRouter();
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, async (firebaseUser: User | null) => {
-      if (firebaseUser) {
-        const token = await firebaseUser.getIdToken();
-        setCookie('firebaseAuthToken', token, 1);
-        setUser(firebaseUser);
-      } else {
-        eraseCookie('firebaseAuthToken');
-        setUser(null);
-      }
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: User | null) => {
+      setUser(firebaseUser);
     });
 
     return () => unsubscribe();
-  }, [setUser]);
+  }, [setUser, isClient]);
   
   useEffect(() => {
-    if (isLoading) return;
+    if (!isClient || isLoading) return;
     
     const isAuthPage = pathname === '/';
     
@@ -58,9 +40,17 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         router.replace('/dashboard');
     }
 
-  }, [user, isLoading, pathname, router])
+  }, [user, isLoading, pathname, router, isClient])
 
-  if (isLoading) {
+  if (isLoading || !isClient) {
+    return <PageLoader />;
+  }
+
+  const isAuthPage = pathname === '/';
+  if (user && isAuthPage) {
+    return <PageLoader />;
+  }
+  if (!user && !isAuthPage) {
     return <PageLoader />;
   }
 
