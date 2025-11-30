@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useStore, type Task } from "@/lib/store";
-import { X, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { toast } from "sonner";
@@ -33,6 +33,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
         setDueDate(taskToEdit.dueDate ? new Date(taskToEdit.dueDate) : null);
         setPriority(taskToEdit.priority);
       } else {
+        // Reset for new task
         setTitle("");
         setDescription("");
         setDueDate(null);
@@ -59,6 +60,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
       createdAt: isEditing ? taskToEdit.createdAt : new Date().toISOString(),
     };
 
+    // Simulate async operation
     setTimeout(() => {
       try {
         if (isEditing) {

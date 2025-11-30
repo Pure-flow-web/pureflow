@@ -16,6 +16,7 @@ export default function PomodoroCustom() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+        // A silent audio file to ensure playback on all browsers/devices
         audioRef.current = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgyLjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1BpbmdCAAAAAABAAAAjAAABnAAAAAAAAAABnAAAABAAAAAAAAAABOupBx4kGv9//5JkAMAAAD5DH//5JkZIAAAADBDH//5Jks4gAAADpDH//5JlL4gAAADpDH//5Jk/ogAAADBDH//5JlFogAAADxDHA==');
     }
   }, []);

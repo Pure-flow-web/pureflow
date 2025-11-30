@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useStore, type Task } from '@/lib/store';
 import TaskModal from '@/components/TaskModal';
-import { Plus, Edit, Trash2, Check, Download, FileText, FileCode } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, FileText, FileCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';

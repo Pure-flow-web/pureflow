@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useStore, type Note } from '@/lib/store';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Check, Download, Save, X, Loader2, FileText, FileCode } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Save, X, Loader2, FileText, FileCode } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
@@ -34,7 +34,10 @@ export default function NotesSection() {
     if (editingNoteId) {
       setIsSaving(true);
       setTimeout(() => {
-        updateNote({ ...notes.find(n => n.id === editingNoteId)!, content: currentContent });
+        const noteToUpdate = notes.find(n => n.id === editingNoteId);
+        if (noteToUpdate) {
+            updateNote({ ...noteToUpdate, content: currentContent });
+        }
         setIsSaving(false);
         setEditingNoteId(null);
         setCurrentContent('');
