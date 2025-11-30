@@ -1,0 +1,40 @@
+"use client";
+
+import { useTheme } from "next-themes";
+import { Sun, Moon, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+
+export default function Header() {
+  const [isMounted, setIsMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  return (
+    <header className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white/30 dark:bg-gray-900/30 backdrop-blur-xl border-b border-gray-200/80 dark:border-gray-800/80">
+      <div className="flex items-center gap-3">
+        <Zap className="text-blue-500 w-7 h-7" />
+        <h1 className="text-xl font-bold tracking-tighter text-gray-900 dark:text-white">
+          PureFlow
+        </h1>
+      </div>
+      <div className="flex items-center gap-4">
+        {isMounted && (
+           <button
+            onClick={toggleTheme}
+            className="p-2 transition-all duration-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+        )}
+      </div>
+    </header>
+  );
+}
