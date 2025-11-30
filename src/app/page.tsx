@@ -13,14 +13,17 @@ export default function PureFlowDashboard() {
   const [isMounted, setIsMounted] = useState(false);
   const [activeView, setActiveView] = useState<View>("dashboard");
 
+  // This effect ensures client-side-only code runs after mounting.
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // Render a loading state on the server and during initial client render
+  // to prevent hydration mismatches.
   if (!isMounted) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="w-10 h-10 border-4 border-blue-500 rounded-full animate-spin border-t-transparent"></div>
+      <div className="flex items-center justify-center min-h-screen bg-light-bg dark:bg-dark-bg">
+        <div className="w-10 h-10 border-4 border-accent-blue rounded-full animate-spin border-t-transparent"></div>
       </div>
     );
   }
@@ -51,22 +54,23 @@ export default function PureFlowDashboard() {
   const NavButton = ({ view, label, icon: Icon }: { view: View; label: string; icon: React.ElementType }) => (
     <button
       onClick={() => setActiveView(view)}
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 w-full md:w-auto md:justify-start justify-center ${
         activeView === view
-          ? "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400"
-          : "text-gray-500 hover:bg-gray-200/50 dark:text-gray-400 dark:hover:bg-gray-800"
+          ? "bg-accent-blue/10 text-accent-blue dark:bg-accent-blue/20"
+          : "text-gray-500 hover:bg-gray-400/10 dark:text-gray-400 dark:hover:bg-gray-700/50"
       }`}
+      aria-label={`Switch to ${label} view`}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className="w-5 h-5 shrink-0" />
       <span className="hidden md:inline">{label}</span>
     </button>
   );
 
   return (
-    <div className="flex min-h-screen text-gray-800 bg-gray-100/50 dark:bg-gray-900/95 dark:text-gray-200">
+    <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="sticky top-0 h-screen p-3 md:p-4 bg-white/60 dark:bg-gray-900/60 backdrop-blur-lg border-r border-gray-200/80 dark:border-gray-800/80">
-        <nav className="flex flex-col items-center gap-2 md:items-stretch">
+      <aside className="sticky top-0 h-screen p-3 md:p-4 bg-white/30 dark:bg-gray-800/20 backdrop-blur-xl border-r border-black/5 dark:border-white/5">
+        <nav className="flex flex-col items-center h-full gap-2 md:items-stretch">
           <NavButton view="dashboard" label="Dashboard" icon={LayoutGrid} />
           <NavButton view="tasks" label="Tasks" icon={ListChecks} />
           <NavButton view="notes" label="Notes" icon={StickyNote} />
@@ -75,7 +79,7 @@ export default function PureFlowDashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <Header />
         <main className="p-4 sm:p-6">{renderContent()}</main>
       </div>

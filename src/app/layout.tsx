@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import React from "react";
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "PureFlow",
-  description: "Focus on what matters. Your all-in-one productivity dashboard.",
+  description: "The ultimate, battle-hardened productivity web app.",
 };
 
 export default function RootLayout({
@@ -22,17 +15,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-gray-100 dark:bg-gray-900`}>
+      <body className="font-sans bg-light-bg dark:bg-dark-bg text-gray-800 dark:text-gray-200 transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
           <Toaster
             position="bottom-right"
             toastOptions={{
               classNames: {
-                toast:
-                  "dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700",
+                toast: "dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700 shadow-soft dark:shadow-soft-dark",
                 error: "dark:!bg-red-900 dark:!text-white",
-                success: "dark:!bg-green-900 dark:!text-white",
+                success: "dark:!bg-green-800 dark:!text-white",
               },
             }}
           />
