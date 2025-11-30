@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useUser } from "@/firebase";
 import {
   CheckSquare,
   FileText,
@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { auth } from "@/lib/firebase";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 
@@ -29,7 +28,6 @@ const navItems = [
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
-  // Avoid hydration mismatch
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -56,6 +54,7 @@ function ThemeToggle() {
 
 function SidebarContent() {
   const pathname = usePathname();
+  const auth = useAuth();
 
   return (
     <div className="flex flex-col h-full bg-secondary/50 dark:bg-secondary/20">
@@ -130,17 +129,17 @@ export default function AppLayout({
   children: React.ReactNode;
   title: string;
 }) {
-  const { user, loading } = useAuth();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isUserLoading && !user) {
       router.push("/");
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
 
-  if (loading || !user) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoaderCircle className="w-12 h-12 animate-spin text-accent" />
@@ -150,7 +149,6 @@ export default function AppLayout({
 
   return (
     <div className="flex h-screen bg-background text-foreground">
-      {/* Mobile Sidebar */}
       <div
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity lg:hidden ${
           sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -165,7 +163,6 @@ export default function AppLayout({
         <SidebarContent />
       </div>
 
-      {/* Desktop Sidebar */}
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
         <SidebarContent />
       </div>

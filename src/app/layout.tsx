@@ -4,6 +4,7 @@ import "./globals.css";
 import "react-datepicker/dist/react-datepicker.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "sonner";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -26,8 +27,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster position="bottom-right" theme="system" />
+          <FirebaseClientProvider>
+            {children}
+            <Toaster position="bottom-right" theme="system" />
+          </FirebaseClientProvider>
         </ThemeProvider>
       </body>
     </html>

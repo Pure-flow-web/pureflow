@@ -1,22 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Plus, Trash2, Edit, LoaderCircle, CheckSquare, Square } from "lucide-react";
-import { useStore, Task } from "@/store/useStore";
+import { collection, doc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
+import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import TaskModal from "./TaskModal";
-import { useAuth } from "@/hooks/useAuth";
+
+export interface Task {
+  id: string;
+  title: string;
+  note?: string;
+  completed: boolean;
+  priority?: "Low" | "Medium" | "High";
+  dueDate?: Date | Timestamp | null;
+}
 
 export default function TaskList() {
-  const { user } = useAuth();
-  const { tasks, loading, fetchTasks, updateTask, deleteTask } = useStore();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  
+  const tasksQuery = useMemoFirebase(
+    () => user && collection(firestore, "users", user.uid, "tasks"),
+    [user, firestore]
+  );
+  const { data: tasks, isLoading: loading } = useCollection<Task>(tasksQuery);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      fetchTasks(user.uid);
-    }
-  }, [user, fetchTasks]);
 
   const handleOpenModal = (task: Task | null = null) => {
     setEditingTask(task);
@@ -25,12 +35,14 @@ export default function TaskList() {
 
   const handleToggleComplete = (task: Task) => {
     if (!user) return;
-    updateTask(user.uid, task.id!, { completed: !task.completed });
+    const taskRef = doc(firestore, "users", user.uid, "tasks", task.id);
+    updateDoc(taskRef, { completed: !task.completed });
   };
   
   const handleDeleteTask = (taskId: string) => {
     if (!user) return;
-    deleteTask(user.uid, taskId);
+    const taskRef = doc(firestore, "users", user.uid, "tasks", taskId);
+    deleteDoc(taskRef);
   };
 
   const priorityClasses: { [key: string]: string } = {
@@ -39,7 +51,17 @@ export default function TaskList() {
     Low: "bg-green-500",
   };
 
-  const sortedTasks = tasks.slice().sort((a, b) => (a.completed ? 1 : -1) - (b.completed ? 1 : -1) || (b.dueDate?.getTime() || 0) - (a.dueDate?.getTime() || 0));
+  const sortedTasks = tasks
+  ? [...tasks].sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      const dueDateA = a.dueDate ? (a.dueDate instanceof Timestamp ? a.dueDate.toMillis() : new Date(a.dueDate).getTime()) : 0;
+      const dueDateB = b.dueDate ? (b.dueDate instanceof Timestamp ? b.dueDate.toMillis() : new Date(b.dueDate).getTime()) : 0;
+      return dueDateB - dueDateA;
+    })
+  : [];
+
 
   return (
     <div className="relative min-h-[calc(100vh-15rem)]">
@@ -47,7 +69,7 @@ export default function TaskList() {
         <div className="flex justify-center items-center h-64">
           <LoaderCircle className="w-8 h-8 animate-spin text-accent" />
         </div>
-      ) : tasks.length === 0 ? (
+      ) : sortedTasks.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <p>No tasks yet. Get started by adding one!</p>
         </div>
@@ -77,7 +99,7 @@ export default function TaskList() {
                 <div className="flex items-center gap-4 mt-2 text-xs">
                   {task.dueDate && (
                     <span className="text-muted-foreground">
-                      {new Date(task.dueDate).toLocaleDateString()}
+                      {(task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate)).toLocaleDateString()}
                     </span>
                   )}
                   {task.priority && (

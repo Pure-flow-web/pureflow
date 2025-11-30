@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
-import { useStore, Task } from "@/store/useStore";
-import { useAuth } from "@/hooks/useAuth";
+import { collection, doc, addDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { useFirestore, useUser } from "@/firebase";
 import { X } from "lucide-react";
 import { toast } from "sonner";
+import { Task } from "./TaskList";
 
 interface TaskModalProps {
   task: Task | null;
@@ -13,9 +14,9 @@ interface TaskModalProps {
 }
 
 export default function TaskModal({ task, onClose }: TaskModalProps) {
-  const { user } = useAuth();
-  const { addTask, updateTask } = useStore();
-  
+  const { user } = useUser();
+  const firestore = useFirestore();
+
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
   const [priority, setPriority] = useState<"Low" | "Medium" | "High">("Medium");
@@ -26,7 +27,7 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
       setTitle(task.title);
       setNote(task.note || "");
       setPriority(task.priority || "Medium");
-      setDueDate(task.dueDate ? new Date(task.dueDate) : null);
+      setDueDate(task.dueDate ? (task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate)) : null);
     }
   }, [task]);
 
@@ -50,12 +51,12 @@ export default function TaskModal({ task, onClose }: TaskModalProps) {
     };
 
     if (task && task.id) {
-      // Update existing task
-      await updateTask(user.uid, task.id, taskData);
+      const taskRef = doc(firestore, "users", user.uid, "tasks", task.id);
+      await updateDoc(taskRef, taskData);
       toast.success("Task updated!");
     } else {
-      // Add new task
-      await addTask(user.uid, taskData);
+      const tasksCol = collection(firestore, "users", user.uid, "tasks");
+      await addDoc(tasksCol, taskData);
       toast.success("Task added!");
     }
     onClose();

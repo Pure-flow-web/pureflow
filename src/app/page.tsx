@@ -2,12 +2,12 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { useAuth } from "@/hooks/useAuth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { useAuth, useUser } from "@/firebase";
 import { LogIn, LoaderCircle } from "lucide-react";
 
 function AuthPage() {
+  const auth = useAuth();
   const handleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -35,16 +35,16 @@ function AuthPage() {
 }
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!isUserLoading && user) {
       router.push("/tasks");
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
 
-  if (loading) {
+  if (isUserLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoaderCircle className="w-12 h-12 animate-spin text-accent" />

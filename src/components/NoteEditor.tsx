@@ -1,56 +1,61 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useStore, Note } from "@/store/useStore";
-import { useAuth } from "@/hooks/useAuth";
-import { Plus, Trash2, LoaderCircle } from "lucide-react";
+import { collection, doc, serverTimestamp, Timestamp, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { Plus, Trash2, LoaderCircle, FileText } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 
+export interface Note {
+  id: string;
+  content: string;
+  lastEdited: Date | Timestamp;
+}
+
 export default function NoteEditor() {
-  const { user } = useAuth();
-  const {
-    notes,
-    loading: notesLoading,
-    fetchNotes,
-    saveNote,
-    deleteNote,
-  } = useStore();
-  
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const notesQuery = useMemoFirebase(
+    () => user && collection(firestore, "users", user.uid, "notes"),
+    [user, firestore]
+  );
+  const { data: notes, isLoading: notesLoading } = useCollection<Note>(notesQuery);
+
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [content, setContent] = useState("");
-  const debouncedContent = useDebounce(content, 2000); // 2-second debounce
-
-  useEffect(() => {
-    if (user) {
-      fetchNotes(user.uid);
-    }
-  }, [user, fetchNotes]);
+  const debouncedContent = useDebounce(content, 1000);
 
   useEffect(() => {
     if (debouncedContent && activeNote && user) {
-      const noteToSave: Note = {
-        ...activeNote,
+      const noteRef = doc(firestore, "users", user.uid, "notes", activeNote.id);
+      updateDoc(noteRef, {
         content: debouncedContent,
-        lastEdited: new Date(),
-      };
-      saveNote(user.uid, noteToSave).then(() => {
-        // Optimistically update active note
-        setActiveNote(noteToSave);
+        lastEdited: serverTimestamp(),
       });
     }
-  }, [debouncedContent, activeNote, user, saveNote]);
+  }, [debouncedContent, activeNote, user, firestore]);
 
   const handleNewNote = async () => {
     if (!user) return;
-    const newNote: Partial<Note> = {
+    const notesCol = collection(firestore, "users", user.uid, "notes");
+    const newNoteDoc = await addDoc(notesCol, {
       content: "",
-      lastEdited: new Date(),
-    };
-    const savedNote = await saveNote(user.uid, newNote);
-    if (savedNote) {
-      selectNote(savedNote);
-    }
+      lastEdited: serverTimestamp(),
+    });
+    // The useCollection hook will pick up the new note
+    // We can optimistically select it, but we need the ID.
+    // Let's find it in the next render of `notes`.
   };
+  
+  useEffect(() => {
+    if (notes && !activeNote) {
+        const sortedNotes = notes.slice().sort((a, b) => (b.lastEdited as Timestamp).toMillis() - (a.lastEdited as Timestamp).toMillis());
+        if (sortedNotes.length > 0) {
+            selectNote(sortedNotes[0]);
+        }
+    }
+  }, [notes, activeNote]);
 
   const selectNote = (note: Note) => {
     setActiveNote(note);
@@ -59,12 +64,21 @@ export default function NoteEditor() {
 
   const handleDeleteNote = (noteId: string) => {
     if (!user) return;
-    deleteNote(user.uid, noteId);
+    const noteRef = doc(firestore, "users", user.uid, "notes", noteId);
+    deleteDoc(noteRef);
     if (activeNote?.id === noteId) {
       setActiveNote(null);
       setContent("");
     }
   };
+
+  const sortedNotes = notes
+    ? [...notes].sort((a, b) => {
+        const dateA = a.lastEdited instanceof Timestamp ? a.lastEdited.toDate() : a.lastEdited;
+        const dateB = b.lastEdited instanceof Timestamp ? b.lastEdited.toDate() : b.lastEdited;
+        return dateB.getTime() - dateA.getTime();
+      })
+    : [];
 
   return (
     <div className="flex flex-col lg:flex-row h-full gap-6">
@@ -86,11 +100,8 @@ export default function NoteEditor() {
             </div>
           ) : (
             <div className="space-y-2">
-              {notes.length > 0 ? (
-                notes
-                  .slice()
-                  .sort((a, b) => b.lastEdited.getTime() - a.lastEdited.getTime())
-                  .map((note) => (
+              {sortedNotes.length > 0 ? (
+                sortedNotes.map((note) => (
                     <div
                       key={note.id}
                       onClick={() => selectNote(note)}
@@ -105,7 +116,9 @@ export default function NoteEditor() {
                       </p>
                       <div className="flex justify-between items-center">
                         <p className="text-xs text-muted-foreground">
-                          {new Date(note.lastEdited).toLocaleString()}
+                          {note.lastEdited instanceof Timestamp
+                            ? note.lastEdited.toDate().toLocaleString()
+                            : new Date(note.lastEdited).toLocaleString()}
                         </p>
                         <button
                           onClick={(e) => {
