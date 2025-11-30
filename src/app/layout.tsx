@@ -5,7 +5,10 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import React from "react";
 
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "PureFlow",
@@ -22,13 +25,17 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gray-100 dark:bg-gray-900`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
-          <Toaster position="bottom-right" toastOptions={{
-            classNames: {
-              toast: 'dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700',
-              error: 'dark:!bg-red-900 dark:!text-white',
-              success: 'dark:!bg-green-900 dark:!text-white',
-            }
-          }}/>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              classNames: {
+                toast:
+                  "dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700",
+                error: "dark:!bg-red-900 dark:!text-white",
+                success: "dark:!bg-green-900 dark:!text-white",
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>
