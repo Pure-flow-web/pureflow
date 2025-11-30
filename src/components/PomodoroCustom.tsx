@@ -9,18 +9,33 @@ import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 
 
-function PomodoroSaveModal({ isOpen, onClose, durationMinutes }: { isOpen: boolean, onClose: () => void, durationMinutes: number }) {
-  const { addPomodoroSession } = useStore();
+function PomodoroSaveModal({ 
+  isOpen, 
+  onClose, 
+  durationMinutes,
+  editingSession 
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  durationMinutes: number,
+  editingSession: PomodoroSession | null 
+}) {
+  const { addPomodoroSession, updatePomodoroSession } = useStore();
   const [taskName, setTaskName] = useState('');
   const [note, setNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
     if (isOpen) {
-      setTaskName('');
-      setNote('');
+      if (editingSession) {
+        setTaskName(editingSession.taskName);
+        setNote(editingSession.note);
+      } else {
+        setTaskName('');
+        setNote('');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, editingSession]);
 
   const handleSave = () => {
     if (!taskName.trim()) {
@@ -28,19 +43,29 @@ function PomodoroSaveModal({ isOpen, onClose, durationMinutes }: { isOpen: boole
       return;
     }
     setIsLoading(true);
-    const newSession: PomodoroSession = {
-      id: `pomo_${Date.now()}`,
-      taskName: taskName.trim(),
-      note: note.trim(),
-      durationMinutes,
-      date: new Date().toISOString(),
-    };
 
     setTimeout(() => {
+      if (editingSession) {
+        updatePomodoroSession({
+          ...editingSession,
+          taskName: taskName.trim(),
+          note: note.trim(),
+        });
+        toast.success("Session updated!");
+      } else {
+        const newSession: PomodoroSession = {
+          id: `pomo_${Date.now()}`,
+          taskName: taskName.trim(),
+          note: note.trim(),
+          durationMinutes,
+          date: new Date().toISOString(),
+        };
         addPomodoroSession(newSession);
         toast.success("Session saved!");
-        setIsLoading(false);
-        onClose();
+      }
+
+      setIsLoading(false);
+      onClose();
     }, 300);
   };
   
@@ -50,7 +75,7 @@ function PomodoroSaveModal({ isOpen, onClose, durationMinutes }: { isOpen: boole
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="relative w-full max-w-lg p-6 mx-4 bg-light-bg dark:bg-gray-800 rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} className="absolute text-gray-400 top-4 right-4 hover:text-gray-600 dark:hover:text-gray-200"><X className="w-5 h-5" /></button>
-        <h2 className="text-xl font-bold">Save Session</h2>
+        <h2 className="text-xl font-bold">{editingSession ? 'Edit Session' : 'Save Session'}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Log the focus session you just completed.</p>
         
         <div className="mt-6 space-y-4">
@@ -68,13 +93,13 @@ function PomodoroSaveModal({ isOpen, onClose, durationMinutes }: { isOpen: boole
           
           <div className="flex justify-between items-center text-sm p-3 bg-gray-100 dark:bg-gray-900/50 rounded-lg">
             <span className="font-medium">Duration: <span className="font-bold">{durationMinutes} minutes</span></span>
-            <span className="text-gray-500 dark:text-gray-400">{new Date().toLocaleDateString()}</span>
+            <span className="text-gray-500 dark:text-gray-400">{new Date(editingSession?.date || Date.now()).toLocaleDateString()}</span>
           </div>
 
           <div className="flex justify-end pt-2 space-x-3">
             <button onClick={onClose} disabled={isLoading} className="px-4 py-2 text-sm font-medium transition-colors rounded-lg h-10 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50">Cancel</button>
             <button onClick={handleSave} disabled={isLoading} className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-accent-blue hover:bg-accent-blue/90 disabled:opacity-50">
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save to History"}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (editingSession ? "Save Changes" : "Save to History")}
             </button>
           </div>
         </div>
@@ -85,7 +110,7 @@ function PomodoroSaveModal({ isOpen, onClose, durationMinutes }: { isOpen: boole
 
 
 export default function PomodoroCustom() {
-  const { pomodoroHistory, addPomodoroSession, deletePomodoroSession } = useStore();
+  const { pomodoroHistory, deletePomodoroSession } = useStore();
 
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
@@ -94,12 +119,18 @@ export default function PomodoroCustom() {
   const [isActive, setIsActive] = useState(false);
   const [isEditingDuration, setIsEditingDuration] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<PomodoroSession | null>(null);
 
-  // When timer ends, add to history and show notification
   const handleTimerEnd = useCallback(() => {
-    toast.success("Time's Up! Great focus session.");
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    setIsSaveModalOpen(true); // Open modal to save the session
+    toast.success("Time's Up! Great focus session. 🎉");
+    confetti({ 
+      particleCount: 150, 
+      spread: 80, 
+      origin: { y: 0.5 },
+      colors: ['#60A5FA', '#FBBF24', '#34D399', '#F87171', '#A78BFA']
+    });
+    setEditingSession(null); // Ensure we are creating a new session
+    setIsSaveModalOpen(true);
   }, []);
 
   const resetTimer = useCallback(() => {
@@ -141,6 +172,16 @@ export default function PomodoroCustom() {
     } else {
       toast.error("Please enter a duration between 1 and 120 minutes.");
     }
+  };
+
+  const handleOpenSaveModal = () => {
+    setEditingSession(null);
+    setIsSaveModalOpen(true);
+  };
+  
+  const handleEditSession = (session: PomodoroSession) => {
+    setEditingSession(session);
+    setIsSaveModalOpen(true);
   };
 
   const getFormattedDate = (dateString: string) => new Date(dateString).toISOString().split('T')[0];
@@ -190,10 +231,16 @@ export default function PomodoroCustom() {
   };
 
   const progress = duration > 0 ? (duration * 60 - (minutes * 60 + seconds)) / (duration * 60) : 0;
+  const isStopped = !isActive && minutes === duration && seconds === 0;
 
   return (
     <>
-    <PomodoroSaveModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} durationMinutes={duration} />
+    <PomodoroSaveModal 
+      isOpen={isSaveModalOpen} 
+      onClose={() => setIsSaveModalOpen(false)} 
+      durationMinutes={editingSession ? editingSession.durationMinutes : duration}
+      editingSession={editingSession}
+    />
     <div className="p-5 bg-white/30 dark:bg-gray-800/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-xl shadow-soft">
       <h2 className="text-xl font-bold tracking-tight text-center">Pomodoro</h2>
       <div className="relative my-6 flex items-center justify-center">
@@ -233,9 +280,9 @@ export default function PomodoroCustom() {
         </div>
       )}
 
-      {!isActive && (minutes !== duration || seconds !== 0) && (
+      {!isActive && !isStopped && (
         <div className="flex justify-center mb-6">
-            <button onClick={() => setIsSaveModalOpen(true)} className="inline-flex items-center justify-center h-11 gap-2.5 px-6 text-sm font-semibold text-white bg-accent-blue/80 rounded-lg hover:bg-accent-blue">
+            <button onClick={handleOpenSaveModal} className="inline-flex items-center justify-center h-11 gap-2.5 px-6 text-sm font-semibold text-white bg-accent-blue/80 rounded-lg hover:bg-accent-blue">
                 <Save className="w-4 h-4" /> Save Session
             </button>
         </div>
@@ -265,7 +312,7 @@ export default function PomodoroCustom() {
                        {session.note && <p className="text-xs mt-2 p-2 bg-gray-100 dark:bg-gray-900/50 rounded whitespace-pre-wrap">{session.note}</p>}
                     </div>
                     <div className="flex items-center gap-0.5 flex-shrink-0 ml-2">
-                      <button onClick={() => toast.info("Edit coming soon!")} className="p-2 text-gray-400 rounded-full h-8 w-8 hover:bg-gray-500/10 hover:text-accent-blue"><Edit className="w-4 h-4" /></button>
+                      <button onClick={() => handleEditSession(session)} className="p-2 text-gray-400 rounded-full h-8 w-8 hover:bg-gray-500/10 hover:text-accent-blue"><Edit className="w-4 h-4" /></button>
                       <button onClick={() => deletePomodoroSession(session.id)} className="p-2 text-gray-400 rounded-full h-8 w-8 hover:bg-gray-500/10 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                     </div>
                 </div>

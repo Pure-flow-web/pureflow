@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, Check, FileText, FileCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import confetti from 'canvas-confetti';
 
 const priorityStyles: { [key in Task['priority']]: string } = {
   Urgent: 'border-l-red-500',
@@ -19,9 +20,22 @@ function TaskItem({ task }: { task: Task }) {
   const { toggleTask, deleteTask, setTaskToEdit } = useStore();
   const formattedDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
 
+  const handleToggle = () => {
+    toggleTask(task.id);
+    if (!task.completed) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#60A5FA', '#FBBF24', '#34D399', '#F87171', '#A78BFA']
+      });
+      toast.success("Task Completed! Great work. 🚀");
+    }
+  };
+
   return (
     <li className={`flex items-start gap-3 p-3.5 transition-all bg-white/50 dark:bg-gray-800/40 border-l-4 rounded-lg shadow-soft hover:shadow-md ${priorityStyles[task.priority]} ${task.completed ? "opacity-60" : ""}`}>
-      <button onClick={() => toggleTask(task.id)} className="flex-shrink-0 mt-0.5 group" aria-label={`Mark task ${task.completed ? 'incomplete' : 'complete'}`}>
+      <button onClick={handleToggle} className="flex-shrink-0 mt-0.5 group" aria-label={`Mark task ${task.completed ? 'incomplete' : 'complete'}`}>
         <div className={`w-5 h-5 flex items-center justify-center rounded-md border-2 transition-all duration-200 ${task.completed ? "bg-accent-blue border-accent-blue" : "border-gray-300 dark:border-gray-600 group-hover:border-accent-blue"}`}>
           {task.completed && <Check className="w-4 h-4 text-white" />}
         </div>
