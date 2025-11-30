@@ -1,0 +1,148 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All data,
+ * including tasks and notes, is segregated into private subcollections under a
+ * specific user's document. This ensures that a user can only ever access their
+ * own data, providing strong data privacy by default.
+ *
+ * Data Structure: All application data is nested under the `/users/{userId}`
+ * path, where `{userId}` corresponds to the Firebase Authentication UID. User
+ * profiles are stored at this root level, while their specific data (tasks, notes)
+ * is stored in dedicated subcollections (e.g., `/users/{userId}/tasks/{taskId}`).
+ *
+ * Key Security Decisions:
+ * - User Isolation: The fundamental rule is that users can only interact with
+ *   documents within their own data tree (i.e., paths starting with `/users/{their_uid}`).
+ * - No Public Data: There are no publicly readable collections. All access
+ *   requires authentication.
+ * - User Listing Disabled: It is not possible to query the top-level `/users`
+ *   collection, preventing enumeration of all application users.
+ * - Ownership is Immutable: Once a document is created (e.g., a task), its
+ *   ownership (`userId` field) cannot be changed.
+ * - Deleting a user profile document is disabled to prevent orphaned data in
+ *   subcollections.
+ *
+ * Denormalization for Authorization: The data model uses path-based security,
+ * which is a form of denormalization. The user's UID is part of the document path,
+ * making ownership checks extremely fast and simple without needing extra database
+ * reads (`get()` calls). Additionally, documents like Tasks and Notes contain a
+ * `userId` field, which is validated against the path on creation to ensure
+ * data integrity.
+ *
+ * Structural Segregation: The use of separate `tasks` and `notes` subcollections
+ * under each user ensures that documents with different structures and purposes
+ * are kept separate. This simplifies rules and queries, as all documents within a
+ * given collection path share the same security context.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions for re-usable logic
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     *  Checks if a user is the owner of an existing document.
+     *  CRITICAL for all update and delete operations to prevent acting on
+     *  non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the user document being created has an 'id' field
+     * that matches the user's auth UID.
+     */
+    function hasValidUserDataOnCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     *  Ensures critical relational fields on a User document cannot be changed.
+     */
+    function isUserDataImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+    
+    /**
+     * Validates that the task document being created has a 'userId' field
+     * that matches the user's auth UID from the path.
+     */
+    function hasValidTaskDataOnCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     *  Ensures critical relational fields on a Task document cannot be changed.
+     */
+    function isTaskDataImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+    
+    /**
+     * Validates that the note document being created has a 'userId' field
+     * that matches the user's auth UID from the path.
+     */
+    function hasValidNoteDataOnCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     *  Ensures critical relational fields on a Note document cannot be changed.
+     */
+    function isNoteDataImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * @description Manages user profile documents.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own profile document.
+     * @deny (get) A user trying to read another user's profile.
+     * @principle Restricts access to a user's own data tree and allows self-creation of a profile.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Disallow listing all users for security.
+      allow create: if isOwner(userId) && hasValidUserDataOnCreate(userId);
+      allow update: if isExistingOwner(userId) && isUserDataImmutable();
+      allow delete: if false; // Prevent users from deleting their own account document.
+    }
+
+    /**
+     * @description Manages tasks that belong exclusively to a single user.
+     * @path /users/{userId}/tasks/{taskId}
+     * @allow (create) An authenticated user creating a task for themselves.
+     * @deny (list) A user trying to list tasks belonging to another user.
+     * @principle Enforces strict ownership for all operations on a user's private subcollection.
+     */
+    match /users/{userId}/tasks/{taskId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidTaskDataOnCreate(userId);
+      allow update: if isExistingOwner(userId) && isTaskDataImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages notes that belong exclusively to a single user.
+     * @path /users/{userId}/notes/{noteId}
+     * @allow (update) An authenticated user updating one of their own notes.
+     * @deny (delete) A user trying to delete a note belonging to another user.
+     * @principle Enforces strict ownership for all operations on a user's private subcollection.
+     */
+    match /users/{userId}/notes/{noteId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidNoteDataOnCreate(userId);
+      allow update: if isExistingOwner(userId) && isNoteDataImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
