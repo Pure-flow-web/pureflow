@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useStore } from "@/store/useStore";
 import { auth, db } from "@/lib/firebase";
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, where } from 'firebase/firestore';
+import { onSnapshot } from "firebase/firestore";
 import { toast } from 'sonner';
-import { LogOut, Sun, Moon, Plus, LoaderCircle, CheckSquare, Trash2, Edit } from 'lucide-react';
+import { LogOut, Sun, Moon, Plus, CheckSquare, Trash2, Edit, LoaderCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
-import TaskModal from './TaskModal';
-import { useCollection } from '@/hooks/useCollection';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import type { Task } from '@/lib/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Timestamp } from 'firebase/firestore';
 
 
 function ThemeToggle() {
@@ -26,13 +32,124 @@ function ThemeToggle() {
   );
 }
 
+function TaskModal({ isOpen, onClose, task }: { isOpen: boolean, onClose: () => void, task: Task | null }) {
+    const { user } = useStore();
+    const [title, setTitle] = useState("");
+    const [dueDate, setDueDate] = useState<Date | null>(null);
+  
+    useEffect(() => {
+      if (task) {
+        setTitle(task.title);
+        setDueDate(task.dueDate ? task.dueDate.toDate() : null);
+      } else {
+        setTitle("");
+        setDueDate(null);
+      }
+    }, [task, isOpen]);
+  
+    const handleSubmit = async () => {
+      if (!user) {
+        toast.error("You must be logged in.");
+        return;
+      }
+      if (!title.trim()) {
+        toast.error("Task title is required.");
+        return;
+      }
+  
+      const taskData = {
+        title: title.trim(),
+        dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
+        completed: task?.completed ?? false,
+      };
+  
+      try {
+        if (task) {
+          const taskRef = doc(db, `users/${user.uid}/tasks`, task.id);
+          await updateDoc(taskRef, taskData);
+          toast.success("Task updated!");
+        } else {
+          const tasksColRef = collection(db, `users/${user.uid}/tasks`);
+          await addDoc(tasksColRef, { ...taskData, createdAt: serverTimestamp(), userId: user.uid });
+          toast.success("Task added!");
+        }
+        onClose();
+      } catch (error: any) {
+        toast.error("Failed to save task", { description: error.message });
+      }
+    };
+  
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{task ? "Edit Task" : "Add New Task"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="title" className="text-right">
+                Title
+              </Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="col-span-3"
+                placeholder="e.g. Finish project proposal"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="dueDate" className="text-right">
+                Due Date
+              </Label>
+              <div className="col-span-3">
+                <DatePicker
+                  selected={dueDate}
+                  onChange={(date) => setDueDate(date)}
+                  className="w-full"
+                  placeholderText="Select a date"
+                  isClearable
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSubmit}>{task ? "Save Changes" : "Add Task"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+}
+
 export default function DashboardPage() {
   const { user } = useStore();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const tasksQuery = user ? query(collection(db, `users/${user.uid}/tasks`), orderBy('createdAt', 'desc')) : null;
-  const { data: tasks, isLoading } = useCollection<Task>(tasksQuery);
+  useEffect(() => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    const q = query(collection(db, `users/${user.uid}/tasks`), orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const tasksData: Task[] = [];
+        querySnapshot.forEach((doc) => {
+            tasksData.push({ id: doc.id, ...doc.data() } as Task);
+        });
+        setTasks(tasksData);
+        setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching tasks:", error);
+        toast.error("Failed to fetch tasks.");
+        setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -57,6 +174,7 @@ export default function DashboardPage() {
 
   const handleDeleteTask = async (taskId: string, taskTitle: string) => {
     if (!user) return;
+    if (!confirm(`Are you sure you want to delete "${taskTitle}"?`)) return;
     const taskRef = doc(db, `users/${user.uid}/tasks`, taskId);
     try {
       await deleteDoc(taskRef);
@@ -66,20 +184,19 @@ export default function DashboardPage() {
     }
   };
   
-  const sortedTasks = tasks
-    ? [...tasks].sort((a, b) => {
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        if (!a.dueDate && !b.dueDate) return 0;
-        if (!a.dueDate) return 1;
-        if (!b.dueDate) return -1;
-        return a.dueDate.toMillis() - b.dueDate.toMillis();
+        const aDueDate = a.dueDate ? a.dueDate.toMillis() : Infinity;
+        const bDueDate = b.dueDate ? b.dueDate.toMillis() : Infinity;
+        return aDueDate - bDueDate;
       })
-    : [];
+  }, [tasks]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
-        <h1 className="text-xl font-bold">DoneFlow</h1>
+        <h1 className="text-xl font-bold">WorkDone</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted-foreground hidden sm:inline">
             Hi, {user?.displayName || "User"}
@@ -95,18 +212,18 @@ export default function DashboardPage() {
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-semibold">Your Tasks</h2>
-            <button onClick={() => handleOpenModal()} className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button onClick={() => handleOpenModal()}>
                 <Plus className="w-4 h-4 mr-2" /> Add Task
-            </button>
+            </Button>
           </div>
           
           {isLoading && <LoadingSpinner />}
           
-          {!isLoading && tasks && tasks.length === 0 && (
+          {!isLoading && tasks.length === 0 && (
             <div className="text-center py-16 border-2 border-dashed rounded-lg">
                 <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-medium">All clear!</h3>
-                <p className="mt-1 text-sm text-muted-foreground">You have no tasks. Add one to get started.</p>
+                <h3 className="mt-4 text-lg font-medium">All done!</h3>
+                <p className="mt-1 text-sm text-muted-foreground">You have no pending tasks. Add one to get started.</p>
             </div>
           )}
           
@@ -121,9 +238,9 @@ export default function DashboardPage() {
                 >
                   <button onClick={() => handleToggleComplete(task)} className="mt-1 shrink-0">
                     {task.completed ? (
-                      <CheckSquare className="w-5 h-5 text-green-500" />
+                      <CheckSquare className="w-5 h-5 text-primary" />
                     ) : (
-                      <div className="w-5 h-5 rounded border-2 border-muted-foreground"></div>
+                      <div className="w-5 h-5 rounded border-2 border-muted-foreground/50"></div>
                     )}
                   </button>
                   <div className="flex-1">
@@ -137,8 +254,12 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <div className="flex gap-1">
-                     <button onClick={() => handleOpenModal(task)} className="p-2 text-muted-foreground hover:text-primary rounded-md transition-colors"><Edit className="w-4 h-4" /></button>
-                     <button onClick={() => handleDeleteTask(task.id, task.title)} className="p-2 text-muted-foreground hover:text-destructive rounded-md transition-colors"><Trash2 className="w-4 h-4" /></button>
+                     <Button variant="ghost" size="icon" onClick={() => handleOpenModal(task)} className="h-8 w-8 text-muted-foreground hover:text-primary">
+                        <Edit className="w-4 h-4" />
+                     </Button>
+                     <Button variant="ghost" size="icon" onClick={() => handleDeleteTask(task.id, task.title)} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                     </Button>
                   </div>
                 </li>
               ))}

@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import {
-  signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
@@ -13,7 +13,7 @@ import { setDoc, doc } from "firebase/firestore";
 import { toast } from "sonner";
 import { LoaderCircle, Eye, EyeOff } from "lucide-react";
 
-export default function WelcomePage() {
+export default function AuthPage() {
   const [isLoginView, setIsLoginView] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +28,6 @@ export default function WelcomePage() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      // Check if user is new, if so create a document
       await setDoc(doc(db, "users", user.uid), {
           displayName: user.displayName,
           email: user.email,
@@ -46,11 +45,9 @@ export default function WelcomePage() {
     setIsLoading(true);
     try {
       if (isLoginView) {
-        // Sign In
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         toast.success(`Welcome back, ${userCredential.user.displayName || 'User'}!`);
       } else {
-        // Sign Up
         if (!name.trim()) {
           toast.error("Name is required.");
           setIsLoading(false);
@@ -76,8 +73,8 @@ export default function WelcomePage() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">DoneFlow</h1>
-            <p className="mt-2 text-muted-foreground">Simple, beautiful productivity.</p>
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">WorkDone</h1>
+            <p className="mt-2 text-muted-foreground">Focus on what matters.</p>
         </div>
 
         <div className="rounded-lg border bg-card p-6 shadow-sm">

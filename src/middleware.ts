@@ -4,12 +4,12 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('firebaseAuthToken');
 
-  // If user has a token and tries to access the root page, redirect to dashboard
+  // If user has a token and tries to access the root login page, redirect to dashboard
   if (token && pathname === '/') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
   
-  // If user does not have a token and tries to access dashboard, redirect to root
+  // If user does not have a token and tries to access a protected route, redirect to login
   if (!token && pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/', request.url));
   }

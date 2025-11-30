@@ -3,19 +3,20 @@ import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth"
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyByp5VeFvNpLgpBLie8lwBRm0sNyiCph3I",
-  authDomain: "studio-2296895549-5fe2c.firebaseapp.com",
-  projectId: "studio-2296895549-5fe2c",
-  storageBucket: "studio-2296895549-5fe2c.appspot.com",
-  messagingSenderId: "842772495994",
-  appId: "1:842772495994:web:e962d2aa56c54ae3ee05c3",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Set persistence to local storage
-setPersistence(auth, browserLocalPersistence);
+if (typeof window !== 'undefined') {
+  setPersistence(auth, browserLocalPersistence);
+}
 
 export { app, auth, db };
