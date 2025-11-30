@@ -7,7 +7,7 @@ import NotesSection from "@/components/NotesSection";
 import PomodoroCustom from "@/components/PomodoroCustom";
 import { LayoutGrid, ListChecks, StickyNote, Timer } from "lucide-react";
 
-type View = "dashboard" | "tasks" | "notes";
+type View = "dashboard" | "tasks" | "notes" | "pomodoro";
 
 export default function PureFlowDashboard() {
   const [isMounted, setIsMounted] = useState(false);
@@ -41,6 +41,8 @@ export default function PureFlowDashboard() {
         return <TaskList />;
       case "notes":
         return <NotesSection />;
+      case "pomodoro":
+        return <PomodoroCustom />;
       default:
         return null;
     }
@@ -68,6 +70,7 @@ export default function PureFlowDashboard() {
           <NavButton view="dashboard" label="Dashboard" icon={LayoutGrid} />
           <NavButton view="tasks" label="Tasks" icon={ListChecks} />
           <NavButton view="notes" label="Notes" icon={StickyNote} />
+          <NavButton view="pomodoro" label="Pomodoro" icon={Timer} />
         </nav>
       </aside>
 
