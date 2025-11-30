@@ -1,20 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('firebaseIdToken');
+  const token = request.cookies.get('firebaseAuthToken');
 
-  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
-
-  // If user is trying to access auth page while logged in, redirect to dashboard
-  if (isAuthPage && token) {
+  // If user has a token and tries to access the root page, redirect to dashboard
+  if (token && pathname === '/') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
-
-  // If user is trying to access a protected page while not logged in, redirect to login
-  const isProtectedPage = pathname.startsWith('/dashboard') || pathname.startsWith('/tasks') || pathname.startsWith('/notes') || pathname.startsWith('/pomodoro');
-  if (isProtectedPage && !token) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  
+  // If user does not have a token and tries to access dashboard, redirect to root
+  if (!token && pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();

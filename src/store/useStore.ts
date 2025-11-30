@@ -1,16 +1,16 @@
-import { create } from 'zustand';
-import { User } from 'firebase/auth';
+"use client";
 
-interface UserState {
+import { create } from 'zustand';
+import { type User } from 'firebase/auth';
+
+interface StoreState {
   user: User | null;
   isLoading: boolean;
   setUser: (user: User | null) => void;
-  setLoading: (isLoading: boolean) => void;
 }
 
-export const useUserStore = create<UserState>((set) => ({
+export const useStore = create<StoreState>((set) => ({
   user: null,
   isLoading: true,
   setUser: (user) => set({ user, isLoading: false }),
-  setLoading: (isLoading) => set({ isLoading }),
 }));
