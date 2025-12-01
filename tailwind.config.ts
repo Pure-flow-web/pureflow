@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'accent-blue': '#60A5FA',
+        'accent-blue': '#60A5FA', // Legacy, can be removed if not used
       },
       fontFamily: {
         sans: [

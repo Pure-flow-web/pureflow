@@ -82,30 +82,30 @@ function PomodoroSaveModal({
     <dialog ref={dialogRef} onCancel={handleClose} className="bg-transparent backdrop:bg-black/60 backdrop:backdrop-blur-sm p-0 m-0 w-full max-w-lg rounded-xl">
       <div className="w-full max-w-lg p-6 mx-4 bg-gray-50 dark:bg-gray-800 rounded-xl shadow-2xl">
         <button onClick={handleClose} className="absolute text-gray-400 top-4 right-4 hover:text-gray-600 dark:hover:text-gray-200"><X className="w-5 h-5" /></button>
-        <h2 className="text-xl font-bold">{editingSession ? 'Edit Session' : 'Save Session'}</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{editingSession ? 'Edit Session' : 'Save Session'}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Log the focus session you just completed.</p>
         
         <div className="mt-6 space-y-4">
           <div>
             <label htmlFor="taskName" className="block mb-1.5 text-sm font-medium text-gray-600 dark:text-gray-300">What did you work on?</label>
             <input id="taskName" type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)} placeholder="e.g., Wrote chapter 3 of novel"
-              className="w-full h-10 px-3 text-sm bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue" />
+              className="w-full h-10 px-3 text-sm bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500" />
           </div>
 
           <div>
             <label htmlFor="sessionNote" className="block mb-1.5 text-sm font-medium text-gray-600 dark:text-gray-300">Note (Optional)</label>
             <textarea id="sessionNote" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Any details to add?" rows={3}
-              className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue" />
+              className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500" />
           </div>
           
           <div className="flex justify-between items-center text-sm p-3 bg-gray-100 dark:bg-gray-900/50 rounded-lg">
-            <span className="font-medium">Duration: <span className="font-bold">{durationMinutes} minutes</span></span>
+            <span className="font-medium text-gray-800 dark:text-gray-200">Duration: <span className="font-bold">{durationMinutes} minutes</span></span>
             <span className="text-gray-500 dark:text-gray-400">{new Date(editingSession?.date || Date.now()).toLocaleDateString()}</span>
           </div>
 
           <div className="flex justify-end pt-2 space-x-3">
             <button type="button" onClick={handleClose} disabled={isLoading} className="px-4 py-2 text-sm font-medium transition-colors rounded-lg h-10 text-gray-700 bg-gray-200 hover:bg-gray-300 dark:text-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50">Cancel</button>
-            <button onClick={handleSave} disabled={isLoading} className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-accent-blue hover:bg-blue-500 disabled:opacity-50">
+            <button onClick={handleSave} disabled={isLoading} className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-purple-600 hover:bg-purple-700 disabled:opacity-50">
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (editingSession ? "Save Changes" : "Save to History")}
             </button>
           </div>
@@ -134,9 +134,9 @@ export default function PomodoroCustom() {
       particleCount: 150, 
       spread: 80, 
       origin: { y: 0.5 },
-      colors: ['#60A5FA', '#FBBF24', '#34D399', '#F87171', '#A78BFA']
+      colors: ['#a855f7', '#facc15', '#4ade80', '#f87171', '#818cf8']
     });
-    setEditingSession(null); // Ensure we are creating a new session
+    setEditingSession(null);
     setIsSaveModalOpen(true);
   }, []);
 
@@ -249,19 +249,19 @@ export default function PomodoroCustom() {
       editingSession={editingSession}
     />
     <div className="p-5 bg-white/30 dark:bg-gray-800/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-xl shadow-soft">
-      <h2 className="text-xl font-bold tracking-tight text-center">Pomodoro</h2>
+      <h2 className="text-xl font-bold tracking-tight text-center text-gray-900 dark:text-white">Pomodoro</h2>
       <div className="relative my-6 flex items-center justify-center">
         <svg className="transform -rotate-90 w-48 h-48" viewBox="0 0 200 200">
           <circle cx="100" cy="100" r="90" stroke="currentColor" strokeWidth="12" className="text-gray-200 dark:text-gray-700/50" fill="transparent" />
           <circle cx="100" cy="100" r="90" stroke="currentColor" strokeWidth="12" fill="transparent"
-            className="text-accent-blue"
+            className="text-purple-600"
             strokeDasharray={2 * Math.PI * 90}
             strokeDashoffset={(2 * Math.PI * 90) * (1 - progress)}
             style={{ transition: 'stroke-dashoffset 1s linear' }}
           />
         </svg>
         <div className="absolute">
-          <p className="text-5xl font-bold tabular-nums tracking-tighter">
+          <p className="text-5xl font-bold tabular-nums tracking-tighter text-gray-900 dark:text-white">
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </p>
         </div>
@@ -273,33 +273,31 @@ export default function PomodoroCustom() {
                 value={customDuration}
                 onChange={e => setCustomDuration(Number(e.target.value))}
                 onKeyDown={(e) => e.key === 'Enter' && handleSetDuration()}
-                className="w-24 h-12 px-3 text-lg font-bold text-center bg-gray-100 border-2 border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                className="w-24 h-12 px-3 text-lg font-bold text-center bg-gray-100 border-2 border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
-            <button onClick={handleSetDuration} className="flex items-center justify-center w-12 h-12 text-white bg-accent-blue rounded-lg hover:bg-blue-500"><Check className="w-6 h-6"/></button>
+            <button onClick={handleSetDuration} className="flex items-center justify-center w-12 h-12 text-white bg-purple-600 rounded-lg hover:bg-purple-700"><Check className="w-6 h-6"/></button>
         </div>
       ) : (
         <div className="flex items-center justify-center space-x-4 mb-4">
           <button onClick={() => setIsEditingDuration(true)} className="flex items-center justify-center w-12 h-12 bg-gray-200/50 rounded-full dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"><Settings className="w-6 h-6" /></button>
-          <button onClick={() => setIsActive(!isActive)} className="flex items-center justify-center w-20 h-20 text-white bg-accent-blue rounded-full hover:bg-blue-500 shadow-lg">
+          <button onClick={() => setIsActive(!isActive)} className="flex items-center justify-center w-20 h-20 text-white bg-purple-600 rounded-full hover:bg-purple-700 shadow-lg">
             {isActive ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
           </button>
           <button onClick={resetTimer} className="flex items-center justify-center w-12 h-12 bg-gray-200/50 rounded-full dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"><RotateCcw className="w-6 h-6" /></button>
         </div>
       )}
 
-      {/* Logic to show 'Save Session' button if the timer was started and is now paused but not reset */}
       {!isActive && !isStopped && (
         <div className="flex justify-center mb-6">
-            <button onClick={handleOpenSaveModal} className="inline-flex items-center justify-center h-11 gap-2.5 px-6 text-sm font-semibold text-white bg-accent-blue/80 rounded-lg hover:bg-accent-blue">
+            <button onClick={handleOpenSaveModal} className="inline-flex items-center justify-center h-11 gap-2.5 px-6 text-sm font-semibold text-white bg-purple-600/80 rounded-lg hover:bg-purple-700">
                 <Save className="w-4 h-4" /> Save Session
             </button>
         </div>
       )}
 
-      {/* Pomodoro History Section */}
       <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5">
         <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">History</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">History</h3>
             <div className="flex items-center gap-2">
                 <button onClick={downloadHistoryAsTxt} title="Download All as TXT" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200/50 rounded-lg dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"><FileText className="w-4 h-4" /></button>
                 <button onClick={downloadHistoryAsDocx} title="Download All as Word" className="inline-flex items-center justify-center h-9 w-9 text-gray-500 bg-gray-200/50 rounded-lg dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"><FileCode className="w-4 h-4" /></button>
@@ -313,14 +311,14 @@ export default function PomodoroCustom() {
               <div key={session.id} className="p-3 bg-white/40 dark:bg-gray-800/30 rounded-lg shadow-sm">
                 <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-semibold">{session.taskName}</p>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{session.taskName}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {session.durationMinutes} mins on {new Date(session.date).toLocaleDateString()}
                       </p>
-                       {session.note && <p className="text-xs mt-2 p-2 bg-gray-100 dark:bg-gray-900/50 rounded whitespace-pre-wrap">{session.note}</p>}
+                       {session.note && <p className="text-xs mt-2 p-2 bg-gray-100 dark:bg-gray-900/50 rounded whitespace-pre-wrap text-gray-700 dark:text-gray-300">{session.note}</p>}
                     </div>
                     <div className="flex items-center gap-0.5 flex-shrink-0 ml-2">
-                      <button onClick={() => handleEditSession(session)} className="p-2 text-gray-400 rounded-full h-8 w-8 hover:bg-gray-500/10 hover:text-accent-blue"><Edit className="w-4 h-4" /></button>
+                      <button onClick={() => handleEditSession(session)} className="p-2 text-gray-400 rounded-full h-8 w-8 hover:bg-gray-500/10 hover:text-purple-500"><Edit className="w-4 h-4" /></button>
                       <button onClick={() => deletePomodoroSession(session.id)} className="p-2 text-gray-400 rounded-full h-8 w-8 hover:bg-gray-500/10 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                     </div>
                 </div>

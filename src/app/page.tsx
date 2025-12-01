@@ -17,12 +17,10 @@ export default function PureFlowDashboard() {
     setIsMounted(true);
   }, []);
 
-  // A simple loading state to prevent flash of unstyled content or layout shifts
-  // while the client-side code is hydrating.
   if (!isMounted) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="w-10 h-10 border-4 border-accent-blue rounded-full animate-spin border-t-transparent"></div>
+        <div className="w-10 h-10 border-4 border-purple-500 rounded-full animate-spin border-t-transparent"></div>
       </div>
     );
   }
@@ -55,7 +53,7 @@ export default function PureFlowDashboard() {
       onClick={() => setActiveView(view)}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 w-full md:w-auto md:justify-start justify-center ${
         activeView === view
-          ? "bg-accent-blue/10 text-accent-blue dark:bg-accent-blue/20"
+          ? "bg-purple-600/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400"
           : "text-gray-500 hover:bg-gray-400/10 dark:text-gray-400 dark:hover:bg-gray-700/50"
       }`}
       aria-label={`Switch to ${label} view`}
@@ -67,7 +65,6 @@ export default function PureFlowDashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar Navigation */}
       <aside className="sticky top-0 h-screen p-3 md:p-4 bg-white/30 dark:bg-gray-800/20 backdrop-blur-xl border-r border-black/5 dark:border-white/5">
         <nav className="flex flex-col items-center h-full gap-2 md:items-stretch">
           <NavButton view="dashboard" label="Dashboard" icon={LayoutGrid} />
@@ -77,7 +74,6 @@ export default function PureFlowDashboard() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <Header />
         <main className="p-4 sm:p-6">{renderContent()}</main>

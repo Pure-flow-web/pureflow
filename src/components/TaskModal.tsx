@@ -66,7 +66,6 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
       priority,
     };
 
-    // Simulate network delay for better UX
     setTimeout(() => {
       try {
         if (isEditing) {
@@ -91,19 +90,19 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
         <button onClick={handleClose} className="absolute text-gray-400 top-4 right-4 hover:text-gray-600 dark:hover:text-gray-200">
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-xl font-bold">{taskToEdit && taskToEdit.id ? "Edit Task" : "Add New Task"}</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{taskToEdit && taskToEdit.id ? "Edit Task" : "Add New Task"}</h2>
         
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           <div>
             <label htmlFor="title" className="block mb-1.5 text-sm font-medium text-gray-600 dark:text-gray-300">Title</label>
             <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Finalize project report"
-              className="w-full h-10 px-3 text-sm bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue" />
+              className="w-full h-10 px-3 text-sm text-gray-900 bg-white dark:bg-gray-700/50 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500" />
           </div>
 
           <div>
             <label htmlFor="description" className="block mb-1.5 text-sm font-medium text-gray-600 dark:text-gray-300">Description (Optional)</label>
             <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Add more details..." rows={3}
-              className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue" />
+              className="w-full px-3 py-2 text-sm text-gray-900 bg-white dark:bg-gray-700/50 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500" />
           </div>
             
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -112,7 +111,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
               <DatePicker
                 selected={dueDate}
                 onChange={(date) => setDueDate(date)}
-                className="w-full h-10 px-3 text-sm bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue"
+                className="w-full h-10 px-3 text-sm text-gray-900 bg-white dark:bg-gray-700/50 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
                 placeholderText="Select a date"
                 dateFormat="MMMM d, yyyy"
               />
@@ -121,7 +120,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
               <label className="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-300">Priority</label>
               <div className="flex flex-wrap items-center gap-2">
                 {priorities.map((p) => (
-                  <button key={p} type="button" onClick={() => setPriority(p)} className={`px-3 py-1 text-sm font-medium rounded-full transition-all ${priority === p ? 'ring-2 ring-offset-2 ring-accent-blue dark:ring-offset-gray-800 bg-accent-blue/20' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>{p}</button>
+                  <button key={p} type="button" onClick={() => setPriority(p)} className={`px-3 py-1 text-sm font-medium rounded-full transition-all text-gray-800 dark:text-gray-200 ${priority === p ? 'ring-2 ring-offset-2 ring-purple-500 dark:ring-offset-gray-800 bg-purple-600/20 text-purple-700 dark:text-purple-300' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>{p}</button>
                 ))}
               </div>
             </div>
@@ -133,7 +132,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
               Cancel
             </button>
             <button type="submit" disabled={isLoading} 
-              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-accent-blue hover:bg-blue-500 disabled:opacity-50 disabled:bg-blue-400">
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg h-10 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:bg-purple-400">
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (taskToEdit && taskToEdit.id ? "Save Changes" : "Add Task")}
             </button>
           </div>

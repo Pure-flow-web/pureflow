@@ -15,13 +15,12 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white/30 dark:bg-gray-900/30 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
       <div className="flex items-center gap-3">
-        <Zap className="text-accent-blue w-7 h-7" />
+        <Zap className="text-purple-500 w-7 h-7" />
         <h1 className="text-xl font-bold tracking-tighter text-gray-900 dark:text-white">
           PureFlow
         </h1>
       </div>
       <div className="flex items-center gap-4">
-        {/* Only render the theme toggle button on the client side to avoid hydration mismatch */}
         {isMounted && (
            <button
             onClick={toggleTheme}
