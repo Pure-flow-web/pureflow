@@ -136,7 +136,7 @@ export const useStore = create<AppState>()(
 
     }),
     {
-      name: 'pureflow-app-storage-v2', 
+      name: 'pureflow-app-storage-v3', 
       storage: createJSONStorage(() => safeLocalStorage),
       onRehydrateError: () => {
         console.warn("PureFlow: Could not rehydrate state from localStorage. Starting fresh.");

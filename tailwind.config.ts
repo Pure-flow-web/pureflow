@@ -23,10 +23,6 @@ const config: Config = {
           'Arial',
           '"Noto Sans"',
           'sans-serif',
-          '"Apple Color Emoji"',
-          '"Segoe UI Emoji"',
-          '"Segoe UI Symbol"',
-          '"Noto Color Emoji"',
         ],
       },
       backdropBlur: {
@@ -34,7 +30,6 @@ const config: Config = {
       },
       boxShadow: {
         'soft': '0 4px 12px rgba(0, 0, 0, 0.05)',
-        'soft-dark': '0 4px 14px rgba(0, 0, 0, 0.1)',
       }
     },
   },

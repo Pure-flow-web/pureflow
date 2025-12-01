@@ -98,7 +98,7 @@ export default function NotesSection() {
         </div>
       )}
 
-      <div className="space-y-2.5">
+      <div className="space-y-2.5 max-h-48 overflow-y-auto pr-2">
         {notes.length === 0 && !editingNoteId ? (
           <div className="py-8 text-center border-2 border-dashed rounded-lg border-gray-300/50 dark:border-gray-600/50">
             <p className="text-sm text-gray-500 dark:text-gray-400">No notes yet. Add one!</p>

@@ -1,7 +1,7 @@
 "use client"
 
+import { useStore } from "@/lib/store"
 import { Toaster as Sonner } from "sonner"
-import { useStore } from "@/lib/store";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 

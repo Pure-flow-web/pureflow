@@ -59,12 +59,11 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
 
     const isEditing = taskToEdit && taskToEdit.id;
 
-    const taskData: Omit<Task, 'id' | 'completed'> = {
+    const taskData: Omit<Task, 'id' | 'completed' | 'createdAt'> = {
       title: title.trim(),
       description: description.trim(),
       dueDate: dueDate ? dueDate.toISOString() : null,
       priority,
-      createdAt: isEditing ? taskToEdit.createdAt : new Date().toISOString(),
     };
 
     setTimeout(() => {
@@ -73,7 +72,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
           updateTask({ ...taskToEdit, ...taskData });
           toast.success("Task updated successfully!");
         } else {
-          addTask({ ...taskData, id: `task_${Date.now()}`, completed: false });
+          addTask({ ...taskData, id: `task_${Date.now()}`, completed: false, createdAt: new Date().toISOString() });
           toast.success("Task added successfully!");
         }
         setIsLoading(false);
@@ -121,7 +120,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
               <label className="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-300">Priority</label>
               <div className="flex flex-wrap items-center gap-2">
                 {priorities.map((p) => (
-                  <button key={p} type="button" onClick={() => setPriority(p)} className={`px-3 py-1 text-sm font-medium rounded-full transition-all ${priority === p ? 'ring-2 ring-offset-2 ring-accent-blue dark:ring-offset-gray-800' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>{p}</button>
+                  <button key={p} type="button" onClick={() => setPriority(p)} className={`px-3 py-1 text-sm font-medium rounded-full transition-all ${priority === p ? 'ring-2 ring-offset-2 ring-accent-blue dark:ring-offset-gray-800 bg-accent-blue/20' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}>{p}</button>
                 ))}
               </div>
             </div>

@@ -42,7 +42,7 @@ function TaskItem({ task }: { task: Task }) {
       </button>
       <div className="flex-1">
         <p className={`font-medium ${task.completed ? "line-through text-gray-500 dark:text-gray-400" : ""}`}>{task.title}</p>
-        {task.description && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{task.description}</p>}
+        {task.description && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 whitespace-pre-wrap">{task.description}</p>}
         {formattedDate && <p className={`text-xs mt-1.5 ${task.completed ? "text-gray-400 dark:text-gray-500" : "text-gray-500 dark:text-gray-400"}`}>{formattedDate}</p>}
       </div>
       <div className="flex items-center gap-0.5">
@@ -145,7 +145,7 @@ export default function TaskList() {
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">You have no {filter} tasks.</p>
           </div>
         ) : (
-          <ul className="space-y-2.5">{filteredTasks.map(task => <TaskItem key={task.id} task={task} />)}</ul>
+          <ul className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-2">{filteredTasks.map(task => <TaskItem key={task.id} task={task} />)}</ul>
         )}
       </div>
       {taskToEdit && <TaskModal isOpen={!!taskToEdit} onClose={handleCloseModal} taskToEdit={taskToEdit} />}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function AppProvider({ children }: { children: React.ReactNode }) {
   const theme = useStore((state) => state.theme);
@@ -27,5 +28,8 @@ export default function AppProvider({ children }: { children: React.ReactNode })
   }
 
   // Once mounted, render the children within the themed context
-  return <>{children}</>;
+  return <>
+    {children}
+    <Toaster position="bottom-right" />
+  </>;
 }
