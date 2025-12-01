@@ -53,24 +53,29 @@ interface AppState {
   deletePomodoroSession: (sessionId: string) => void;
 }
 
+// Custom storage implementation to safely handle localStorage in SSR environments (like Next.js)
 const safeLocalStorage = {
   getItem: (name: string) => {
+    // If we're on the server, return null
     if (typeof window === 'undefined') {
       return null;
     }
     try {
       return localStorage.getItem(name);
     } catch {
+      // In case of any error (e.g., security restrictions), return null
       return null;
     }
   },
   setItem: (name: string, value: string) => {
+    // If we're on the server, do nothing
     if (typeof window === 'undefined') {
       return;
     }
     try {
       localStorage.setItem(name, value);
     } catch (error) {
+      // Log an error if we can't save, e.g., private browsing or storage is full
       console.warn(`PureFlow: Could not save to localStorage.`, error);
     }
   },
@@ -138,6 +143,7 @@ export const useStore = create<AppState>()(
     {
       name: 'pureflow-app-storage-v3', 
       storage: createJSONStorage(() => safeLocalStorage),
+      // This function handles errors during rehydration, preventing crashes if stored data is corrupted
       onRehydrateError: () => {
         console.warn("PureFlow: Could not rehydrate state from localStorage. Starting fresh.");
         return (state, error) => { /* no-op */ };

@@ -21,6 +21,7 @@ export default function Header() {
         </h1>
       </div>
       <div className="flex items-center gap-4">
+        {/* Only render the theme toggle button on the client side to avoid hydration mismatch */}
         {isMounted && (
            <button
             onClick={toggleTheme}

@@ -12,7 +12,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
     setIsMounted(true);
   }, []);
 
-  // Set the class on the <html> element
+  // Set the class on the <html> element for Tailwind's dark mode
   useEffect(() => {
     if (isMounted) {
       document.documentElement.className = theme;
@@ -20,8 +20,9 @@ export default function AppProvider({ children }: { children: React.ReactNode })
     }
   }, [theme, isMounted]);
 
-  // Render a placeholder on the server and during initial hydration
+  // To prevent a flash of unstyled content (FOUC), we hide children until the client has mounted and the theme is determined.
   if (!isMounted) {
+    // Returning null or a loader is also an option, but this hides the content while preserving structure.
     return (
         <div style={{ visibility: 'hidden' }}>{children}</div>
     );

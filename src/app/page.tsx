@@ -17,6 +17,8 @@ export default function PureFlowDashboard() {
     setIsMounted(true);
   }, []);
 
+  // A simple loading state to prevent flash of unstyled content or layout shifts
+  // while the client-side code is hydrating.
   if (!isMounted) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -65,6 +67,7 @@ export default function PureFlowDashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Sidebar Navigation */}
       <aside className="sticky top-0 h-screen p-3 md:p-4 bg-white/30 dark:bg-gray-800/20 backdrop-blur-xl border-r border-black/5 dark:border-white/5">
         <nav className="flex flex-col items-center h-full gap-2 md:items-stretch">
           <NavButton view="dashboard" label="Dashboard" icon={LayoutGrid} />
@@ -74,6 +77,7 @@ export default function PureFlowDashboard() {
         </nav>
       </aside>
 
+      {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <Header />
         <main className="p-4 sm:p-6">{renderContent()}</main>

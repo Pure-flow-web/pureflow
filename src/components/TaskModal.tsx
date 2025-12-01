@@ -66,6 +66,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit }: TaskModalProp
       priority,
     };
 
+    // Simulate network delay for better UX
     setTimeout(() => {
       try {
         if (isEditing) {

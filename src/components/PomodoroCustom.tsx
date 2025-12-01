@@ -287,6 +287,7 @@ export default function PomodoroCustom() {
         </div>
       )}
 
+      {/* Logic to show 'Save Session' button if the timer was started and is now paused but not reset */}
       {!isActive && !isStopped && (
         <div className="flex justify-center mb-6">
             <button onClick={handleOpenSaveModal} className="inline-flex items-center justify-center h-11 gap-2.5 px-6 text-sm font-semibold text-white bg-accent-blue/80 rounded-lg hover:bg-accent-blue">
